@@ -134,7 +134,7 @@ aws-secrets --help
 aws-secrets COMMAND --help
 ```
 
-#### set-parameter
+### set-parameter
 
 Create or modify SSM parameter in environment file.
 
@@ -148,7 +148,7 @@ aws-secrets set-parameter
   [--region]
 ```
 
-##### Options
+### Options
 
 **Parameter**: `--env-file` or `-e`
 
@@ -212,7 +212,7 @@ aws-secrets set-parameter
 
 **Required**: `false`
 
-#### set-secret
+### set-secret
 
 Create or modify secrets in environment file.
 
@@ -225,7 +225,7 @@ aws-secrets set-secret
   [--region]
 ```
 
-##### Options
+### Options
 
 **Parameter**: `--env-file` or `-e`
 
@@ -275,7 +275,7 @@ aws-secrets set-secret
 
 **Required**: `false`
 
-#### view-parameter
+### view-parameter
 
 View SSM parameter value in environment file.
 
@@ -288,7 +288,7 @@ aws-secrets view-parameter
   [--region]
 ```
 
-##### Options
+### Options
 
 **Parameter**: `--env-file` or `-e`
 
@@ -340,7 +340,7 @@ aws-secrets view-parameter
 
 **Required**: `false`
 
-#### deploy
+### deploy
 
 Create or update SSM paramaters and secrets in AWS Account.
 
@@ -351,7 +351,7 @@ aws-secrets deploy
   [--region]
 ```
 
-##### Options
+### Options
 
 **Parameter**: `--env-file` or `-e`
 
@@ -381,7 +381,7 @@ aws-secrets deploy
 
 **Required**: `false`
 
-#### migrate
+### migrate
 
 Clone an environment to another, used for change KMS Key as well.
 
@@ -395,7 +395,7 @@ aws-secrets migrate
   --target-region
 ```
 
-##### Options
+### Options
 
 **Parameter**: `--source`
 
