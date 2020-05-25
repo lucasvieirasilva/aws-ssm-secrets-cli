@@ -13,6 +13,9 @@ class SetParameterResolver():
 
         print(f'Putting parameter {args.name} value with {args.value}')
 
+        if not 'parameters' in yaml_data:
+            yaml_data['parameters'] = []
+
         parameter = next(
             (param for param in yaml_data['parameters'] if param['name'] == args.name), None)
 

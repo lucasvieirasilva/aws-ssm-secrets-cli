@@ -13,6 +13,9 @@ class SetSecretResolver():
 
         print(f'Putting secret {args.name} value with {args.value}')
 
+        if not 'secrets' in yaml_data:
+            yaml_data['secrets'] = []
+
         secret = next(
             (secret for secret in yaml_data['secrets'] if secret['name'] == args.name), None)
 
