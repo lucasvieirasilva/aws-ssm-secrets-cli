@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="aws-ssm-secrets-cli",
-    version='0.0.2',
+    version='0.0.3',
     license='MIT',
     description = 'AWS Secret CLI for manage SSM SecureString and SecretsManager',
     long_description = open("README.md", "r").read(),
@@ -12,7 +12,7 @@ setup(
     long_description_content_type='text/markdown',
     author = 'Lucas Vieira',
     author_email = 'lucas.vieira94@outlook.com',
-    url = 'https://github.com/lucasvieirasilva/aws-secrets-cli',
+    url = 'https://github.com/lucasvieirasilva/aws-ssm-secrets-cli',
     keywords = ['AWS', 'SECRETS', 'SSM', 'MANAGER'],
     install_requires=[
         'boto3',
