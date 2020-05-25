@@ -17,54 +17,56 @@ class DeployResolver():
 
         kms_arn = str(yaml_data['kms']['arn'])
 
-        for secret in yaml_data['secrets']:
-            response = secretsmanager.list_secrets()
+        if 'secrets' in yaml_data:
+            for secret in yaml_data['secrets']:
+                response = secretsmanager.list_secrets()
 
-            aws_secret = next((item for item in response['SecretList'] if item['Name'] == secret['name']), None)
+                aws_secret = next((item for item in response['SecretList'] if item['Name'] == secret['name']), None)
 
-            if aws_secret:
-                print(f"put secret {secret['name']} on aws environment")
-                secretsmanager.put_secret_value(
-                    SecretId=aws_secret['ARN'],
-                    SecretString=kms.decrypt(_session, secret['value'], kms_arn).decode('utf-8')
-                )
-            else:
-                print(f"creating secret {secret['name']} on aws environment")
-                secretsmanager.create_secret(
-                    Name=secret['name'],
-                    Description=secret['description'] if 'description' in secret else '',
-                    SecretString=kms.decrypt(_session, secret['value'], kms_arn).decode('utf-8')
-                )
-
-        for parameter in yaml_data['parameters']:
-            param_value = ''
-            try:
-                param_response = ssm.get_parameter(
-                    Name=parameter['name'],
-                    WithDecryption=True if parameter['type'] == 'SecureString' else False
-                )
-
-                param_value = param_response['Parameter']['Value']
-            except ClientError as e:
-                if e.response['Error']['Code'] == 'ParameterNotFound':
-                    pass
+                if aws_secret:
+                    print(f"put secret {secret['name']} on aws environment")
+                    secretsmanager.put_secret_value(
+                        SecretId=aws_secret['ARN'],
+                        SecretString=kms.decrypt(_session, secret['value'], kms_arn).decode('utf-8')
+                    )
                 else:
-                    raise e
+                    print(f"creating secret {secret['name']} on aws environment")
+                    secretsmanager.create_secret(
+                        Name=secret['name'],
+                        Description=secret['description'] if 'description' in secret else '',
+                        SecretString=kms.decrypt(_session, secret['value'], kms_arn).decode('utf-8')
+                    )
 
-            yaml_param_value = str(parameter['value'])
-            decrypt_on_deploy = parameter['decryptOnDeploy'] if 'decryptOnDeploy' in parameter else True
+        if 'parameters' in yaml_data:
+            for parameter in yaml_data['parameters']:
+                param_value = ''
+                try:
+                    param_response = ssm.get_parameter(
+                        Name=parameter['name'],
+                        WithDecryption=True if parameter['type'] == 'SecureString' else False
+                    )
 
-            if parameter['type'] == 'SecureString' and decrypt_on_deploy:
-                yaml_param_value = kms.decrypt(_session, yaml_param_value, kms_arn).decode('utf-8')
+                    param_value = param_response['Parameter']['Value']
+                except ClientError as e:
+                    if e.response['Error']['Code'] == 'ParameterNotFound':
+                        pass
+                    else:
+                        raise e
 
-            if param_value == yaml_param_value:
-                print(f"parameter {parameter['name']} has not changed")
-            else:
-                print(f"put parameter {parameter['name']} on aws environment")
-                ssm.put_parameter(
-                    Name=parameter['name'],
-                    Description=parameter['description'] if 'description' in parameter else '',
-                    Value=yaml_param_value,
-                    Type=parameter['type'],
-                    Overwrite=True,
-                )
+                yaml_param_value = str(parameter['value'])
+                decrypt_on_deploy = parameter['decryptOnDeploy'] if 'decryptOnDeploy' in parameter else True
+
+                if parameter['type'] == 'SecureString' and decrypt_on_deploy:
+                    yaml_param_value = kms.decrypt(_session, yaml_param_value, kms_arn).decode('utf-8')
+
+                if param_value == yaml_param_value:
+                    print(f"parameter {parameter['name']} has not changed")
+                else:
+                    print(f"put parameter {parameter['name']} on aws environment")
+                    ssm.put_parameter(
+                        Name=parameter['name'],
+                        Description=parameter['description'] if 'description' in parameter else '',
+                        Value=yaml_param_value,
+                        Type=parameter['type'],
+                        Overwrite=True,
+                    )
