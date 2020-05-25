@@ -7,20 +7,14 @@ from aws_secrets.miscellaneous.session import session
 
 class ViewParameterResolver():
     def __call__(self, args):
-        if args.env_file is None:
-            raise ValueError('-e or --env-file is required to this operation')
-
-        if args.parameter is None:
-            raise ValueError('-p or --parameter is required to this operation')
-
         with open(args.env_file, 'r') as env:
             yaml_data = yaml.safe_load(env.read())
 
         parameter = next(
-            (param for param in yaml_data['parameters'] if param['name'] == args.parameter), None)
+            (param for param in yaml_data['parameters'] if param['name'] == args.name), None)
 
         if parameter is None:
-            raise Exception(f'parameter {args.parameter} not found')
+            raise Exception(f'parameter {args.name} not found')
 
         if parameter['type'] == 'SecureString' and not args.non_decrypt:
             kms_arn = str(yaml_data['kms']['arn'])

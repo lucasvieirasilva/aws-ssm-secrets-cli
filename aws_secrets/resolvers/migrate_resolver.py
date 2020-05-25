@@ -8,18 +8,8 @@ from aws_secrets.miscellaneous import session
 
 class MigrateResolver():
     def __call__(self, args):
-        if args.source is None:
-            raise ValueError('-s or --source is required to this operation')
-
-        if args.target is None:
-            raise ValueError('-T or --target is required to this operation')
-
-        if args.target_profile is None:
-            raise ValueError('--target-profile is required to this operation')
-
-        if args.target_region is None:
-            raise ValueError('--target-region is required to this operation')
-
+        session.aws_profile = args.source_profile
+        session.aws_region = args.source_region
         source_session = session.session()
         target_session = boto3.session.Session(region_name=args.target_region, profile_name=args.target_profile)
 

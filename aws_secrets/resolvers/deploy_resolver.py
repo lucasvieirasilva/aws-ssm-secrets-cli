@@ -8,9 +8,6 @@ from aws_secrets.miscellaneous.session import session
 
 class DeployResolver():
     def __call__(self, args):
-        if args.env_file is None:
-            raise ValueError('-e or --env-file is required to this operation')
-
         with open(args.env_file, 'r') as env:
             yaml_data = yaml.safe_load(env.read())
 

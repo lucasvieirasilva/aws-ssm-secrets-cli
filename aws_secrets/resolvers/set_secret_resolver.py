@@ -8,29 +8,20 @@ from aws_secrets.miscellaneous.session import session
 
 class SetSecretResolver():
     def __call__(self, args):
-        if args.env_file is None:
-            raise ValueError('-e or --env-file is required to this operation')
-
-        if args.parameter is None:
-            raise ValueError('-p or --parameter is required to this operation')
-
-        if args.value is None:
-            raise ValueError('-v or --value is required to this operation')
-
         with open(args.env_file, 'r') as env:
             yaml_data = yaml.safe_load(env.read())
 
-        print(f'Putting secret {args.parameter} value with {args.value}')
+        print(f'Putting secret {args.name} value with {args.value}')
 
         secret = next(
-            (secret for secret in yaml_data['secrets'] if secret['name'] == args.parameter), None)
+            (secret for secret in yaml_data['secrets'] if secret['name'] == args.name), None)
 
         if secret is None:
             if args.type is None:
                 raise ValueError('-t or --type is required to this operation')
 
             secret = {
-                'name': args.parameter,
+                'name': args.name,
                 'type': args.type
             }
             yaml_data['secrets'].append(secret)
