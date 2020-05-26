@@ -11,8 +11,6 @@ class SetSecretResolver():
         with open(args.env_file, 'r') as env:
             yaml_data = yaml.safe_load(env.read())
 
-        print(f'Putting secret {args.name} value with {args.value}')
-
         if not 'secrets' in yaml_data:
             yaml_data['secrets'] = []
 
@@ -31,7 +29,18 @@ class SetSecretResolver():
 
         kms_arn = str(yaml_data['kms']['arn'])
 
-        encrypted_value = kms.encrypt(session(), args.value, kms_arn)
+        print("Enter/Paste your secret. Ctrl-D or Ctrl-Z ( windows ) to save it.")
+        contents = []
+        while True:
+            try:
+                line = input()
+            except EOFError:
+                break
+            contents.append(line)
+
+        value = '\n'.join(contents)
+
+        encrypted_value = kms.encrypt(session(), value, kms_arn)
         secret['value'] = encrypted_value.decode('utf-8')
 
         with open(args.env_file, 'w') as outfile:

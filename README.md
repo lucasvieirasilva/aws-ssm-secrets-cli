@@ -142,7 +142,6 @@ Create or modify SSM parameter in environment file.
 aws-secrets set-parameter 
   --env-file 
   --name
-  --value
   [--type]
   [--profile]
   [--region]
@@ -163,16 +162,6 @@ aws-secrets set-parameter
 **Parameter**: `--name` or `-n`
 
 **Description**: SSM Parameter Name
-
-**Data Type**: `String`
-
-**Required**: `true`
-
----
-
-**Parameter**: `--value` or `-v`
-
-**Description**: SSM Parameter Value
 
 **Data Type**: `String`
 
@@ -220,7 +209,6 @@ Create or modify secrets in environment file.
 aws-secrets set-secret
   --env-file 
   --name
-  --value
   [--profile]
   [--region]
 ```
@@ -240,16 +228,6 @@ aws-secrets set-secret
 **Parameter**: `--name` or `-n`
 
 **Description**: Secret Name
-
-**Data Type**: `String`
-
-**Required**: `true`
-
----
-
-**Parameter**: `--value` or `-v`
-
-**Description**: Secret Value
 
 **Data Type**: `String`
 
