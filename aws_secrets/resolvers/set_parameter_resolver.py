@@ -20,9 +20,12 @@ class SetParameterResolver():
         if parameter is None:
             parameter = {
                 'name': args.name,
-                'type': args.type
+                'type': args.type,
             }
             yaml_data['parameters'].append(parameter)
+
+        if args.kms:
+            parameter['kms'] = args.kms
 
         print("Enter/Paste your secret. Ctrl-D or Ctrl-Z ( windows ) to save it.")
         contents = []
@@ -34,13 +37,15 @@ class SetParameterResolver():
             contents.append(line)
 
         value = '\n'.join(contents)
-
+        
         if parameter['type'] == 'SecureString':
             kms_arn = str(yaml_data['kms']['arn'])
 
+            print('Encrypting the value')
             encrypted_value = kms.encrypt(session(), value, kms_arn)
             parameter['value'] = encrypted_value.decode('utf-8')
         else:
+            print('Put new value to the parameter')
             parameter['value'] = value
 
         with open(args.env_file, 'w') as outfile:

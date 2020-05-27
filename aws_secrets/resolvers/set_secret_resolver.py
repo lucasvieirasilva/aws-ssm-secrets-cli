@@ -18,14 +18,13 @@ class SetSecretResolver():
             (secret for secret in yaml_data['secrets'] if secret['name'] == args.name), None)
 
         if secret is None:
-            if args.type is None:
-                raise ValueError('-t or --type is required to this operation')
-
             secret = {
-                'name': args.name,
-                'type': args.type
+                'name': args.name
             }
             yaml_data['secrets'].append(secret)
+
+        if args.kms:
+            secret['kms'] = args.kms
 
         kms_arn = str(yaml_data['kms']['arn'])
 

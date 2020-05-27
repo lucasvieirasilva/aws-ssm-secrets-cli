@@ -36,14 +36,15 @@ def main():
             '-n', '--name', help='SSM Parameter name', type=str, required=True)
         parser.add_argument(
             '-t', '--type', choices=['String', 'SecureString'], help='SSM Parameter Type', default='SecureString')
+        parser.add_argument('-k', '--kms', type=str, help='KMS Key Id or ARN')
         parser.add_argument('--profile', help='AWS Profile', type=str)
         parser.add_argument('--region', help='AWS Region', type=str)
 
     elif opts.action == 'set-secret':
         parser.add_argument('-e', '--env-file',
                             help='Environment file', type=str, required=True)
-        parser.add_argument(
-            '-n', '--name', help='Secret name', type=str, required=True)
+        parser.add_argument('-n', '--name', help='Secret name', type=str, required=True)
+        parser.add_argument('-k', '--kms', type=str, help='KMS Key Id or ARN')
         parser.add_argument('--profile', help='AWS Profile', type=str)
         parser.add_argument('--region', help='AWS Region', type=str)
 

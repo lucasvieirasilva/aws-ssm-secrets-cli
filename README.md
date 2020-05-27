@@ -15,7 +15,7 @@ AWS Secrets CLI provides you a Command Line Interface that manage your secrets u
 ### Install
 
 ```shell
-pip install aws-secrets-cli
+pip install aws-ssm-secrets-cli
 ```
 
 ### Requirements
@@ -142,6 +142,7 @@ Create or modify SSM parameter in environment file.
 aws-secrets set-parameter 
   --env-file 
   --name
+  [--kms]
   [--type]
   [--profile]
   [--region]
@@ -183,6 +184,16 @@ aws-secrets set-parameter
 
 ---
 
+**Parameter**: `--kms` or `-k`
+
+**Description**: KMS Id or ARN
+
+**Data Type**: `String`
+
+**Required**: `false`
+
+---
+
 **Parameter**: `--profile`
 
 **Description**: AWS Profile
@@ -209,6 +220,7 @@ Create or modify secrets in environment file.
 aws-secrets set-secret
   --env-file 
   --name
+  [--kms]
   [--profile]
   [--region]
 ```
@@ -232,6 +244,16 @@ aws-secrets set-secret
 **Data Type**: `String`
 
 **Required**: `true`
+
+---
+
+**Parameter**: `--kms` or `-k`
+
+**Description**: KMS Id or ARN
+
+**Data Type**: `String`
+
+**Required**: `false`
 
 ---
 

@@ -34,6 +34,7 @@ class DeployResolver():
                     secretsmanager.create_secret(
                         Name=secret['name'],
                         Description=secret['description'] if 'description' in secret else '',
+                        KmsKeyId=secret['kms'] if 'kms' in secret else '',
                         SecretString=kms.decrypt(_session, secret['value'], kms_arn).decode('utf-8')
                     )
 
@@ -63,10 +64,16 @@ class DeployResolver():
                     print(f"parameter {parameter['name']} has not changed")
                 else:
                     print(f"put parameter {parameter['name']} on aws environment")
-                    ssm.put_parameter(
-                        Name=parameter['name'],
-                        Description=parameter['description'] if 'description' in parameter else '',
-                        Value=yaml_param_value,
-                        Type=parameter['type'],
-                        Overwrite=True,
-                    )
+
+                    put_parameter_args = {
+                        'Name': parameter['name'],
+                        'Description': parameter['description'] if 'description' in parameter else '',
+                        'Value': yaml_param_value,
+                        'Type': parameter['type'],
+                        'Overwrite': True
+                    }
+
+                    if 'kms' in secret:
+                        put_parameter_args['KeyId'] = secret['kms']
+
+                    ssm.put_parameter(**put_parameter_args)
