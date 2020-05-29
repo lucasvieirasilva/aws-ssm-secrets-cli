@@ -77,10 +77,10 @@ def main():
         parser.print_help()
         sys.exit(0)
 
-    args = parser.parse_args()
-
-    session.aws_profile = args.profile
-    session.aws_region = args.region
+    args = parser.parse_args()        
+    
+    session.aws_profile = args.profile if 'profile' in args else None
+    session.aws_region = args.region if 'region' in args else None
 
     actions[args.action].__call__(args)
 
