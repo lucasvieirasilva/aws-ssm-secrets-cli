@@ -7,6 +7,17 @@ from aws_secrets.miscellaneous.session import session
 
 
 class DeployResolver():
+
+    def get_resource_tags(self, resource):
+        tags = []
+        if 'tags' in resource:
+            for key in resource['tags'].keys():
+                tags.append({
+                    'Key': key,
+                    'Value': resource['tags'][key]
+                })
+        return tags
+
     def __call__(self, args):
         with open(args.env_file, 'r') as env:
             yaml_data = yaml.safe_load(env.read())
@@ -21,21 +32,27 @@ class DeployResolver():
             for secret in yaml_data['secrets']:
                 response = secretsmanager.list_secrets()
 
-                aws_secret = next((item for item in response['SecretList'] if item['Name'] == secret['name']), None)
+                aws_secret = next(
+                    (item for item in response['SecretList'] if item['Name'] == secret['name']), None)
 
                 if aws_secret:
                     print(f"put secret {secret['name']} on aws environment")
                     secretsmanager.put_secret_value(
                         SecretId=aws_secret['ARN'],
-                        SecretString=kms.decrypt(_session, secret['value'], kms_arn).decode('utf-8')
+                        SecretString=kms.decrypt(
+                            _session, secret['value'], kms_arn).decode('utf-8')
                     )
                 else:
-                    print(f"creating secret {secret['name']} on aws environment")
+                    print(
+                        f"creating secret {secret['name']} on aws environment")
+
                     secretsmanager.create_secret(
                         Name=secret['name'],
                         Description=secret['description'] if 'description' in secret else '',
                         KmsKeyId=secret['kms'] if 'kms' in secret else '',
-                        SecretString=kms.decrypt(_session, secret['value'], kms_arn).decode('utf-8')
+                        SecretString=kms.decrypt(
+                            _session, secret['value'], kms_arn).decode('utf-8'),
+                        Tags=self.get_resource_tags(secret)
                     )
 
         if 'parameters' in yaml_data:
@@ -58,19 +75,22 @@ class DeployResolver():
                 decrypt_on_deploy = parameter['decryptOnDeploy'] if 'decryptOnDeploy' in parameter else True
 
                 if parameter['type'] == 'SecureString' and decrypt_on_deploy:
-                    yaml_param_value = kms.decrypt(_session, yaml_param_value, kms_arn).decode('utf-8')
+                    yaml_param_value = kms.decrypt(
+                        _session, yaml_param_value, kms_arn).decode('utf-8')
 
                 if param_value == yaml_param_value:
                     print(f"parameter {parameter['name']} has not changed")
                 else:
-                    print(f"put parameter {parameter['name']} on aws environment")
+                    print(
+                        f"put parameter {parameter['name']} on aws environment")
 
                     put_parameter_args = {
                         'Name': parameter['name'],
                         'Description': parameter['description'] if 'description' in parameter else '',
                         'Value': yaml_param_value,
                         'Type': parameter['type'],
-                        'Overwrite': True
+                        'Overwrite': True,
+                        'Tags': self.get_resource_tags(secret)
                     }
 
                     if 'kms' in secret:
