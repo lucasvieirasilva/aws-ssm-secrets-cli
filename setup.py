@@ -7,7 +7,7 @@ install_requirements = [
 
 setup(
     name="aws-ssm-secrets-cli",
-    version='0.0.11',
+    version='0.0.12',
     license='MIT',
     description = 'AWS Secret CLI for manage SSM SecureString and SecretsManager',
     long_description = open("README.md", "r").read(),

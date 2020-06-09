@@ -10,10 +10,10 @@ from aws_secrets.miscellaneous import session
 
 @click.command(name='decrypt')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
-@click.option('--same-env-file', is_flag=True)
+@click.option('--output', type=click.Path())
 @click.option('--profile')
 @click.option('--region')
-def decrypt(env_file, same_env_file, profile, region):
+def decrypt(env_file, output, profile, region):
     session.aws_profile = profile
     session.aws_region = region
     with open(env_file, 'r') as source:
@@ -43,9 +43,6 @@ def decrypt(env_file, same_env_file, profile, region):
             parameter['value'] = kms.decrypt(
                 _session, parameter['value'], kms_arn).decode('utf-8')
 
-    output_file = f"{env_file}.dec"
-    if same_env_file:
-        output_file = env_file
-    
+    output_file = output_file if output_file else f"{env_file}.dec"
     with open(output_file, 'w') as outfile:
         yaml.safe_dump(data, outfile)
