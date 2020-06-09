@@ -43,6 +43,6 @@ def decrypt(env_file, output, profile, region):
             parameter['value'] = kms.decrypt(
                 _session, parameter['value'], kms_arn).decode('utf-8')
 
-    output_file = output_file if output_file else f"{env_file}.dec"
+    output_file = output if output else f"{env_file}.dec"
     with open(output_file, 'w') as outfile:
         yaml.safe_dump(data, outfile)
