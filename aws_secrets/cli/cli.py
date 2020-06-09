@@ -9,7 +9,6 @@ from aws_secrets.cli.set_secret import set_secret
 from aws_secrets.cli.view_parameter import view_parameter
 from aws_secrets.cli.view_secret import view_secret
 from aws_secrets.cli.deploy import deploy
-from aws_secrets.cli.migrate import migrate
 from aws_secrets.cli.decrypt import decrypt
 from aws_secrets.cli.encrypt import encrypt
 
@@ -28,7 +27,6 @@ cli.add_command(set_secret)
 cli.add_command(view_parameter)
 cli.add_command(view_secret)
 cli.add_command(deploy)
-cli.add_command(migrate)
 cli.add_command(decrypt)
 cli.add_command(encrypt)
 
