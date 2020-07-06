@@ -6,6 +6,7 @@ import json
 from botocore.exceptions import ClientError
 from aws_secrets.miscellaneous import kms
 from aws_secrets.miscellaneous import session
+from aws_secrets.representers.literal import Literal
 
 
 @click.command(name='decrypt')
@@ -32,16 +33,21 @@ def decrypt(env_file, output, profile, region):
     for secret in data['secrets']:
         secret['value'] = kms.decrypt(
             _session, secret['value'], kms_arn).decode('utf-8')
-            
+
         try:
             secret['value'] = json.loads(secret['value'])
-        except ValueError as e:
+        except ValueError:
             pass
 
     for parameter in data['parameters']:
         if parameter['type'] == 'SecureString' and type(parameter['value']) is str:
-            parameter['value'] = kms.decrypt(
+            decrypted_value = kms.decrypt(
                 _session, parameter['value'], kms_arn).decode('utf-8')
+
+            if '\n' in decrypted_value:
+                parameter['value'] = Literal(decrypted_value)
+            else:
+                parameter['value'] = decrypted_value
 
     output_file = output if output else f"{env_file}.dec"
     with open(output_file, 'w') as outfile:
