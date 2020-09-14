@@ -3,13 +3,13 @@ import yaml
 import boto3
 import base64
 from botocore.exceptions import ClientError
-from aws_secrets.miscellaneous import kms
+from aws_secrets.miscellaneous.kms import encrypt
 from aws_secrets.miscellaneous import session
 
 
 @click.command(name='set-parameter')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
-@click.option('-n', '--name', required=True)
+@click.option('-n', '--name', prompt=True, required=True)
 @click.option('-t', '--type',
               required=True, type=click.Choice(['String', 'SecureString'], case_sensitive=True),
               default='SecureString')
@@ -51,9 +51,8 @@ def set_parameter(env_file, name, type, kms, profile, region):
     
     if parameter['type'] == 'SecureString':
         kms_arn = str(yaml_data['kms']['arn'])
-
         print('Encrypting the value')
-        encrypted_value = kms.encrypt(session.session(), value, kms_arn)
+        encrypted_value = encrypt(session.session(), value, kms_arn)
         parameter['value'] = encrypted_value.decode('utf-8')
     else:
         print('Put new value to the parameter')
