@@ -22,9 +22,11 @@ yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
 yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
 yaml.SafeDumper.add_representer(Literal, literal_presenter)
 
+
 @click.group()
 def cli():
     pass
+
 
 cli.add_command(set_parameter)
 cli.add_command(set_secret)
