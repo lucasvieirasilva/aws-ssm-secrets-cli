@@ -86,11 +86,11 @@ def deploy(env_file, profile, region):
                     'Value': yaml_param_value,
                     'Type': parameter['type'],
                     'Overwrite': True,
-                    'Tags': get_resource_tags(secret)
+                    'Tags': get_resource_tags(parameter)
                 }
 
-                if 'kms' in secret:
-                    put_parameter_args['KeyId'] = secret['kms']
+                if 'kms' in parameter:
+                    put_parameter_args['KeyId'] = parameter['kms']
 
                 ssm.put_parameter(**put_parameter_args)
 
