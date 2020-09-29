@@ -1,4 +1,5 @@
 from setuptools import setup, find_packages
+from aws_secrets import __version__
 
 install_requirements = [
     "boto3>=1.3,<2.0",
@@ -8,7 +9,7 @@ install_requirements = [
 
 setup(
     name="aws-ssm-secrets-cli",
-    version='0.0.16',
+    version=__version__,
     license='MIT',
     description = 'AWS Secret CLI for manage SSM SecureString and SecretsManager',
     long_description = open("README.md", "r").read(),
