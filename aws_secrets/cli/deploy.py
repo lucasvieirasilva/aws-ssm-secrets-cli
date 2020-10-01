@@ -42,8 +42,69 @@ def deploy(env_file, dry_run, confirm, profile, region):
                 _session, parameter, global_tags, kms_arn, dry_run, confirm)
 
 
-def deploy_secret(session, secret, global_tags, kms_arn, dry_run, confirm):
+def add_tags_to_secret(session, secret, tags):
     secretsmanager = session.client('secretsmanager')
+
+    secretsmanager.tag_resource(
+        SecretId=secret['name'],
+        Tags=tags
+    )
+
+
+def remove_tags_from_secret(session, secret, aws_tags):
+    secretsmanager = session.client('secretsmanager')
+
+    tags_key = list(
+        map(lambda tag: tag['Key'], aws_tags))
+    secretsmanager.untag_resource(
+        SecretId=secret['name'],
+        TagKeys=tags_key
+    )
+
+
+def process_secret_changes(session, secret, changes, dry_run, confirm, kms_arn):
+    secretsmanager = session.client('secretsmanager')
+
+    print_secret_name(secret['name'])
+    print_changes(changes)
+
+    if not dry_run:
+        confirm_msg = "   --> Would you like to update this secret?"
+
+        def non_replaceable_action(resource):
+            secretsmanager.delete_secret(
+                SecretId=resource['name'],
+                ForceDeleteWithoutRecovery=True
+            )
+            create_secret(session, resource, kms_arn)
+
+        has_non_replaceable_changes = process_non_replaceable_attrs(
+            session, secret, changes, non_replaceable_action)
+
+        if has_non_replaceable_changes == None:
+            return
+
+        if (has_non_replaceable_changes == False and confirm and click.confirm(confirm_msg)) or (has_non_replaceable_changes == False and confirm == False):
+            secretsmanager.update_secret(
+                SecretId=secret['name'],
+                Description=secret['description'] if 'description' in secret else '',
+                KmsKeyId=secret['kms'] if 'kms' in secret else '',
+                SecretString=kms.decrypt(
+                    session, secret['value'], kms_arn).decode('utf-8')
+            )
+
+            tags_change = next(
+                (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
+            aws_tags = tags_change['OldValue'] if tags_change is not None else [
+            ]
+
+            tags = utils.parse_tags(secret)
+            if len(tags) > 0:
+                remove_tags_from_secret(session, secret, aws_tags)
+                add_tags_to_secret(session, secret, tags)
+
+
+def deploy_secret(session, secret, global_tags, kms_arn, dry_run, confirm):
     merge_tags(secret, global_tags)
 
     changes = get_secret_changes(session, secret, kms_arn)
@@ -56,64 +117,11 @@ def deploy_secret(session, secret, global_tags, kms_arn, dry_run, confirm):
             create_secret(session, secret, kms_arn)
     else:
         if len(changes['ChangesList']) > 0:
-            print_secret_name(secret['name'])
-            click.echo(f"--> Changes:")
-            for change_item in changes['ChangesList']:
-                click.echo(f"   --> {change_item['Key']}:")
-                click.echo(
-                    f"          Old Value: {change_item['OldValue']}")
-                click.echo(
-                    f"          New Value: {change_item['Value']}")
-
-            non_replaceable_attrs = list(filter(
-                lambda change: change['Replaceable'] == False, changes['ChangesList']))
-
-            if not dry_run:
-                confirm_msg = "   --> Would you like to update this secret?"
-                if len(non_replaceable_attrs) > 0:
-                    attrs = ", ".join(
-                        list(map(lambda attr: attr['Key'], non_replaceable_attrs)))
-                    if click.confirm(
-                            f"   --> These attributes [{attrs}] cannot be updated, would you like to re-create this secret?"):
-                        secretsmanager.delete_secret(
-                            SecretId=secret['name'],
-                            ForceDeleteWithoutRecovery=True
-                        )
-                        create_secret(session, secret, kms_arn)
-                    else:
-                        click.echo(
-                            f"   --> Ignoring this secret")
-                else:
-                    if confirm and click.confirm(confirm_msg):
-                        secretsmanager.update_secret(
-                            SecretId=secret['name'],
-                            Description=secret['description'] if 'description' in secret else '',
-                            KmsKeyId=secret['kms'] if 'kms' in secret else '',
-                            SecretString=kms.decrypt(
-                                session, secret['value'], kms_arn).decode('utf-8')
-                        )
-
-                        tags_change = next(
-                            (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
-                        aws_tags = tags_change['OldValue'] if tags_change is not None else [
-                        ]
-
-                        tags = utils.parse_tags(secret)
-                        if len(tags) > 0:
-                            tags_key = list(
-                                map(lambda tag: tag['Key'], aws_tags))
-                            secretsmanager.untag_resource(
-                                SecretId=secret['name'],
-                                TagKeys=tags_key
-                            )
-
-                            secretsmanager.tag_resource(
-                                SecretId=secret['name'],
-                                Tags=tags
-                            )
+            process_secret_changes(
+                session, secret, changes, dry_run, confirm, kms_arn)
 
 
-def print_parameter_changes(changes):
+def print_changes(changes):
     click.echo(f"--> Changes:")
     for change_item in changes['ChangesList']:
         click.echo(f"   --> {change_item['Key']}:")
@@ -123,51 +131,52 @@ def print_parameter_changes(changes):
             f"          New Value: {change_item['Value']}")
 
 
-def process_parameter_non_replaceable_attrs(session, parameter, changes):
-    ssm = session.client('ssm')
-
+def process_non_replaceable_attrs(session, resource, changes, action):
     non_replaceable_attrs = list(filter(
         lambda change: change['Replaceable'] == False, changes['ChangesList']))
     if len(non_replaceable_attrs) > 0:
         attrs = ", ".join(
             list(map(lambda attr: attr['Key'], non_replaceable_attrs)))
         if click.confirm(
-                f"   --> These attributes [{attrs}] cannot be updated, would you like to re-create this SSM parameter?"):
-            ssm.delete_parameter(
-                Name=parameter['name']
-            )
+                f"   --> These attributes [{attrs}] cannot be updated, would you like to re-create this resource?"):
+            action(resource)
             return True
         else:
             click.echo(
-                f"   --> Ignoring this SSM parameter")
+                f"   --> Ignoring this resource")
             return None
 
     return False
 
 
 def deploy_parameter_changes(session, parameter, changes, kms_arn, dry_run, confirm):
-    if len(changes['ChangesList']) > 0:
-        print_parameter_name(parameter['name'])
-        print_parameter_changes(changes)
+    print_parameter_name(parameter['name'])
+    print_changes(changes)
 
-        if not dry_run:
-            confirm_msg = "   --> Would you like to update this SSM parameter?"
+    if not dry_run:
+        confirm_msg = "   --> Would you like to update this SSM parameter?"
 
-            has_non_replaceable_changes = process_parameter_non_replaceable_attrs(
-                session, parameter, changes)
+        def non_replaceable_action(param):
+            ssm = session.client('ssm')
+            ssm.delete_parameter(
+                Name=param['name']
+            )
 
-            if has_non_replaceable_changes == None:
-                return
+        has_non_replaceable_changes = process_non_replaceable_attrs(
+            session, parameter, changes, non_replaceable_action)
 
-            if (has_non_replaceable_changes == False and confirm and click.confirm(confirm_msg)) or confirm == False:
-                tags_change = next(
-                    (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
+        if has_non_replaceable_changes == None:
+            return
 
-                aws_tags = tags_change['OldValue'] if tags_change is not None else [
-                ]
+        if (has_non_replaceable_changes == False and confirm and click.confirm(confirm_msg)) or confirm == False:
+            tags_change = next(
+                (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
 
-                create_or_update_ssm_param(
-                    session, parameter, aws_tags, kms_arn)
+            aws_tags = tags_change['OldValue'] if tags_change is not None else [
+            ]
+
+            create_or_update_ssm_param(
+                session, parameter, aws_tags, kms_arn)
 
 
 def deploy_parameter(session, parameter, global_tags, kms_arn, dry_run, confirm):
@@ -182,8 +191,9 @@ def deploy_parameter(session, parameter, global_tags, kms_arn, dry_run, confirm)
             create_or_update_ssm_param(
                 session, parameter, [], kms_arn)
     else:
-        deploy_parameter_changes(
-            session, parameter, changes, kms_arn, dry_run, confirm)
+        if len(changes['ChangesList']) > 0:
+            deploy_parameter_changes(
+                session, parameter, changes, kms_arn, dry_run, confirm)
 
 
 def create_secret(session, secret, kms_arn):
