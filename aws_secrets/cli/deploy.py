@@ -43,16 +43,20 @@ def filter_resources(filter_pattern, resources):
     return resources
 
 
+def get_secrets(yaml_data, filter_pattern):
+    secrets = yaml_data['secrets']
+    if filter_pattern:
+        secrets = filter_resources(filter_pattern, secrets)
+
+    return secrets
+
+
 def process_secrets(session, yaml_data, global_tags, filter_pattern, kms_arn, dry_run, confirm, only_secrets, only_parameters):
     if only_secrets == True or (only_secrets == False and only_parameters == False):
         click.echo("Loading AWS Secrets Manager changes...")
         any_changes = False
         if 'secrets' in yaml_data:
-            secrets = yaml_data['secrets']
-            if filter_pattern:
-                secrets = filter_resources(filter_pattern, secrets)
-
-            for secret in secrets:
+            for secret in get_secrets(yaml_data, filter_pattern):
                 if deploy_secret(
                         session, secret, global_tags, kms_arn, dry_run, confirm):
                     any_changes = True
@@ -61,16 +65,20 @@ def process_secrets(session, yaml_data, global_tags, filter_pattern, kms_arn, dr
             click.echo("no changes required")
 
 
+def get_parameters(yaml_data, filter_pattern):
+    parameters = yaml_data['parameters']
+    if filter_pattern:
+        parameters = filter_resources(filter_pattern, parameters)
+
+    return parameters
+
+
 def process_parameters(session, yaml_data, global_tags, filter_pattern, kms_arn, dry_run, confirm, only_secrets, only_parameters):
     if only_parameters == True or (only_secrets == False and only_parameters == False):
         click.echo("Loading SSM parameter changes...")
         any_changes = False
         if 'parameters' in yaml_data:
-            parameters = yaml_data['parameters']
-            if filter_pattern:
-                parameters = filter_resources(filter_pattern, parameters)
-
-            for parameter in parameters:
+            for parameter in get_parameters(yaml_data, filter_pattern):
                 if deploy_parameter(
                         session, parameter, global_tags, kms_arn, dry_run, confirm):
                     any_changes = True
