@@ -61,10 +61,28 @@ def remove_tags_from_secret(session, secret, aws_tags):
         TagKeys=tags_key
     )
 
-
-def process_secret_changes(session, secret, changes, dry_run, confirm, kms_arn):
+def delete_secret(session, secret):
     secretsmanager = session.client('secretsmanager')
 
+    secretsmanager.delete_secret(
+        SecretId=secret['name'],
+        ForceDeleteWithoutRecovery=True
+    )
+
+
+def update_secret(session, secret, kms_arn):
+    secretsmanager = session.client('secretsmanager')
+
+    secretsmanager.update_secret(
+        SecretId=secret['name'],
+        Description=secret['description'] if 'description' in secret else '',
+        KmsKeyId=secret['kms'] if 'kms' in secret else '',
+        SecretString=kms.decrypt(
+            session, secret['value'], kms_arn).decode('utf-8')
+    )
+
+
+def process_secret_changes(session, secret, changes, dry_run, confirm, kms_arn):
     print_secret_name(secret['name'])
     print_changes(changes)
 
@@ -72,10 +90,7 @@ def process_secret_changes(session, secret, changes, dry_run, confirm, kms_arn):
         confirm_msg = "   --> Would you like to update this secret?"
 
         def non_replaceable_action(resource):
-            secretsmanager.delete_secret(
-                SecretId=resource['name'],
-                ForceDeleteWithoutRecovery=True
-            )
+            delete_secret(session, resource)
             create_secret(session, resource, kms_arn)
 
         has_non_replaceable_changes = process_non_replaceable_attrs(
@@ -85,13 +100,7 @@ def process_secret_changes(session, secret, changes, dry_run, confirm, kms_arn):
             return
 
         if (has_non_replaceable_changes == False and confirm and click.confirm(confirm_msg)) or (has_non_replaceable_changes == False and confirm == False):
-            secretsmanager.update_secret(
-                SecretId=secret['name'],
-                Description=secret['description'] if 'description' in secret else '',
-                KmsKeyId=secret['kms'] if 'kms' in secret else '',
-                SecretString=kms.decrypt(
-                    session, secret['value'], kms_arn).decode('utf-8')
-            )
+            update_secret(session, secret, kms_arn)
 
             tags_change = next(
                 (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
