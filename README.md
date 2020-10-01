@@ -257,8 +257,11 @@ Create or update SSM parameters and secrets in the AWS Account.
 ``` shell
 aws-secrets deploy
   --env-file 
+  [--filter-pattern]
   [--dry-run]
   [--confirm]
+  [--only-secrets]
+  [--only-parameters]
   [--profile]
   [--region]
 ```
