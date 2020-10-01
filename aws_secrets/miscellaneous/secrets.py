@@ -6,7 +6,8 @@ from aws_secrets.miscellaneous import utils
 
 def parse_yaml_secret_value(session, secret_data, kms_arn):
     yaml_secret_value = str(secret_data['value'])
-    yaml_secret_value = kms.decrypt(session, yaml_secret_value, kms_arn).decode('utf-8') 
+    yaml_secret_value = kms.decrypt(
+        session, yaml_secret_value, kms_arn).decode('utf-8')
 
     return yaml_secret_value
 
@@ -53,7 +54,7 @@ def get_secret_changes(session, secret_data, kms_arn):
             changes['ChangesList'].append(
                 {
                     'Key': 'Description',
-                    'HasChanges': True, 
+                    'HasChanges': True,
                     'Replaceable': True,
                     'Value': yaml_secret_description,
                     'OldValue': aws_secret_description
@@ -64,7 +65,7 @@ def get_secret_changes(session, secret_data, kms_arn):
             changes['ChangesList'].append(
                 {
                     'Key': 'KmsKeyId',
-                    'HasChanges': True, 
+                    'HasChanges': True,
                     'Replaceable': True,
                     'Value': secret_data['kms'],
                     'OldValue': aws_secret['KmsKeyId']
@@ -83,7 +84,7 @@ def get_secret_changes(session, secret_data, kms_arn):
             changes['ChangesList'].append(
                 {
                     'Key': 'Tags',
-                    'HasChanges': tags_changes, 
+                    'HasChanges': tags_changes,
                     'Replaceable': True,
                     'Value': yaml_tags_sorted,
                     'OldValue': aws_tags_sorted
@@ -103,9 +104,7 @@ def get_secret_value(session, name):
 
         value = response['SecretString']
     except ClientError as e:
-        if e.response['Error']['Code'] == 'ResourceNotFoundException':
-            pass
-        else:
+        if e.response['Error']['Code'] != 'ResourceNotFoundException':
             raise e
 
     return value
