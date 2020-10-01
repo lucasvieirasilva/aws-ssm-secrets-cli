@@ -2,6 +2,7 @@ import click
 import yaml
 import base64
 import boto3
+import fnmatch
 from botocore.exceptions import ClientError
 from aws_secrets.miscellaneous import kms
 from aws_secrets.miscellaneous import session
@@ -12,13 +13,14 @@ from aws_secrets.miscellaneous import utils
 
 @click.command(name='deploy')
 @click.option('-e', '--env-file', help="Environment YAML file", type=click.Path(), required=True)
+@click.option('--filter-pattern', help="Filter Pattern", type=str)
 @click.option('--dry-run', help="Execution without apply the changes on the environment", is_flag=True)
 @click.option('--confirm', help="Confirm prompt before apply the changes", is_flag=True)
 @click.option('--only-secrets', help="Deploy only AWS Secrets", is_flag=True)
 @click.option('--only-parameters', help="Deploy only SSM Parameters", is_flag=True)
 @click.option('--profile', help="AWS Profile")
 @click.option('--region', help="AWS Region")
-def deploy(env_file, dry_run, confirm, only_secrets, only_parameters, profile, region):
+def deploy(env_file, filter_pattern, dry_run, confirm, only_secrets, only_parameters, profile, region):
     session.aws_profile = profile
     session.aws_region = region
 
@@ -29,28 +31,52 @@ def deploy(env_file, dry_run, confirm, only_secrets, only_parameters, profile, r
     _session = session.session()
     kms_arn = str(yaml_data['kms']['arn'])
 
-    process_secrets(_session, yaml_data, global_tags, kms_arn,
+    process_secrets(_session, yaml_data, global_tags, filter_pattern, kms_arn,
                     dry_run, confirm, only_secrets, only_parameters)
-    process_parameters(_session, yaml_data, global_tags, kms_arn,
+    process_parameters(_session, yaml_data, global_tags, filter_pattern, kms_arn,
                        dry_run, confirm, only_secrets, only_parameters)
 
 
-def process_secrets(session, yaml_data, global_tags, kms_arn, dry_run, confirm, only_secrets, only_parameters):
+def filter_resources(filter_pattern, resources):
+    resources = list(filter(lambda resource: fnmatch.fnmatch(
+        resource['name'], filter_pattern), resources))
+    return resources
+
+
+def process_secrets(session, yaml_data, global_tags, filter_pattern, kms_arn, dry_run, confirm, only_secrets, only_parameters):
     if only_secrets == True or (only_secrets == False and only_parameters == False):
         click.echo("Loading AWS Secrets Manager changes...")
+        any_changes = False
         if 'secrets' in yaml_data:
-            for secret in yaml_data['secrets']:
-                deploy_secret(
-                    session, secret, global_tags, kms_arn, dry_run, confirm)
+            secrets = yaml_data['secrets']
+            if filter_pattern:
+                secrets = filter_resources(filter_pattern, secrets)
+
+            for secret in secrets:
+                if deploy_secret(
+                        session, secret, global_tags, kms_arn, dry_run, confirm):
+                    any_changes = True
+
+        if any_changes == False:
+            click.echo("no changes required")
 
 
-def process_parameters(session, yaml_data, global_tags, kms_arn, dry_run, confirm, only_secrets, only_parameters):
+def process_parameters(session, yaml_data, global_tags, filter_pattern, kms_arn, dry_run, confirm, only_secrets, only_parameters):
     if only_parameters == True or (only_secrets == False and only_parameters == False):
         click.echo("Loading SSM parameter changes...")
+        any_changes = False
         if 'parameters' in yaml_data:
-            for parameter in yaml_data['parameters']:
-                deploy_parameter(
-                    session, parameter, global_tags, kms_arn, dry_run, confirm)
+            parameters = yaml_data['parameters']
+            if filter_pattern:
+                parameters = filter_resources(filter_pattern, parameters)
+
+            for parameter in parameters:
+                if deploy_parameter(
+                        session, parameter, global_tags, kms_arn, dry_run, confirm):
+                    any_changes = True
+
+        if any_changes == False:
+            click.echo("no changes required")
 
 
 def add_tags_to_secret(session, secret, tags):
@@ -137,10 +163,14 @@ def deploy_secret(session, secret, global_tags, kms_arn, dry_run, confirm):
 
         if not dry_run and confirm and click.confirm("--> Would you to create this secret?"):
             create_secret(session, secret, kms_arn)
+            return True
     else:
         if len(changes['ChangesList']) > 0:
             process_secret_changes(
                 session, secret, changes, dry_run, confirm, kms_arn)
+            return True
+
+    return False
 
 
 def print_changes(changes):
@@ -191,14 +221,8 @@ def deploy_parameter_changes(session, parameter, changes, kms_arn, dry_run, conf
             return
 
         if (has_non_replaceable_changes == False and confirm and click.confirm(confirm_msg)) or confirm == False:
-            tags_change = next(
-                (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
-
-            aws_tags = tags_change['OldValue'] if tags_change is not None else [
-            ]
-
             create_or_update_ssm_param(
-                session, parameter, aws_tags, kms_arn)
+                session, parameter, changes, kms_arn)
 
 
 def deploy_parameter(session, parameter, global_tags, kms_arn, dry_run, confirm):
@@ -211,11 +235,15 @@ def deploy_parameter(session, parameter, global_tags, kms_arn, dry_run, confirm)
 
         if (not dry_run and confirm and click.confirm("--> Would you to create this SSM parameter?")) or (not dry_run and confirm == False):
             create_or_update_ssm_param(
-                session, parameter, [], kms_arn)
+                session, parameter, changes, kms_arn)
+            return True
     else:
         if len(changes['ChangesList']) > 0:
             deploy_parameter_changes(
                 session, parameter, changes, kms_arn, dry_run, confirm)
+            return True
+
+    return False
 
 
 def create_secret(session, secret, kms_arn):
@@ -229,35 +257,43 @@ def create_secret(session, secret, kms_arn):
     )
 
 
-def create_or_update_ssm_param(session, parameter, aws_tags, kms_arn):
+def create_or_update_ssm_param(session, parameter, changes, kms_arn):
     ssm = session.client('ssm')
-    put_parameter_args = {
-        'Name': parameter['name'],
-        'Description': parameter['description'] if 'description' in parameter else '',
-        'Value': parse_yaml_parameter_value(session, parameter, kms_arn),
-        'Type': parameter['type'],
-        'Overwrite': True
-    }
 
-    if 'kms' in parameter:
-        put_parameter_args['KeyId'] = parameter['kms']
+    if changes['Exists'] == False or next((c for c in changes['ChangesList'] if c['Key'] != 'Tags'), None):
+        put_parameter_args = {
+            'Name': parameter['name'],
+            'Description': parameter['description'] if 'description' in parameter else '',
+            'Value': parse_yaml_parameter_value(session, parameter, kms_arn),
+            'Type': parameter['type'],
+            'Overwrite': True
+        }
 
-    ssm.put_parameter(**put_parameter_args)
+        if 'kms' in parameter:
+            put_parameter_args['KeyId'] = parameter['kms']
 
-    tags_key = list(map(lambda tag: tag['Key'], aws_tags))
-    ssm.remove_tags_from_resource(
-        ResourceType='Parameter',
-        ResourceId=parameter['name'],
-        TagKeys=tags_key
-    )
+        ssm.put_parameter(**put_parameter_args)
 
-    tags = utils.parse_tags(parameter)
-    if len(tags) > 0:
-        ssm.add_tags_to_resource(
+    tags_change = next(
+        (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
+
+    if tags_change:
+        aws_tags = tags_change['OldValue'] if tags_change is not None else [
+        ]
+        tags_key = list(map(lambda tag: tag['Key'], aws_tags))
+        ssm.remove_tags_from_resource(
             ResourceType='Parameter',
             ResourceId=parameter['name'],
-            Tags=tags
+            TagKeys=tags_key
         )
+
+        tags = utils.parse_tags(parameter)
+        if len(tags) > 0:
+            ssm.add_tags_to_resource(
+                ResourceType='Parameter',
+                ResourceId=parameter['name'],
+                Tags=tags
+            )
 
 
 def print_parameter_name(name):

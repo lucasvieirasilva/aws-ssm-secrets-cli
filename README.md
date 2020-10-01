@@ -268,6 +268,7 @@ aws-secrets deploy
 | Option | Description | Data Type | Required | Options | Default | 
 |--|--|--|--|--|--|
 | `--env-file` or `-e` | Environment file path | `String` | `true` |
+| `--filter-pattern` | Filter Pattern (e.g `/app/db/*/password` match with `/app/db/dev/password` or `/app/db/prod/password` ) | `String` | `false` |
 | `--dry-run` | Execution without apply the changes on the environment | `Boolean` | `false` |  | `false` |
 | `--confirm` | Confirm prompt before apply the changes | `Boolean` | `false` |  | `false` |
 | `--only-secrets` | Apply changes just for AWS Secrets | `Boolean` | `false` |  | `false` |
