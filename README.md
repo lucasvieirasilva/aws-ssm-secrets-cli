@@ -257,6 +257,8 @@ Create or update SSM parameters and secrets in the AWS Account.
 ``` shell
 aws-secrets deploy
   --env-file 
+  [--dry-run]
+  [--confirm]
   [--profile]
   [--region]
 ```
@@ -266,6 +268,10 @@ aws-secrets deploy
 | Option | Description | Data Type | Required | Options | Default | 
 |--|--|--|--|--|--|
 | `--env-file` or `-e` | Environment file path | `String` | `true` |
+| `--dry-run` | Execution without apply the changes on the environment | `Boolean` | `false` |  | `false` |
+| `--confirm` | Confirm prompt before apply the changes | `Boolean` | `false` |  | `false` |
+| `--only-secrets` | Apply changes just for AWS Secrets | `Boolean` | `false` |  | `false` |
+| `--only-parameters` |  Apply changes just for SSM Parameters | `Boolean` | `false` |  | `false` |
 | `--profile` | AWS Profile | `String` | `false` |  |  |
 | `--region` | AWS Region | `String` | `false` |  |  |
 
@@ -304,3 +310,18 @@ parameters:
 
 >
 > If you use `!cmd` resolver with `SecureString`, you must disable the decryption action on the deployment. Otherwise, the CLI will try to decrypt the resolved value, and the process will be failed.
+
+### Global Tags
+
+You also can include Tags on a global level:
+
+```yaml
+tags:
+  SomeKey: SomeValue
+kms:
+  arn: 'arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab'
+parameters:
+  ...
+secrets:
+  ...
+```

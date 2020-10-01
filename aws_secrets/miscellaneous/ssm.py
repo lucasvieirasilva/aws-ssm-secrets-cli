@@ -107,9 +107,9 @@ def check_if_tags_has_changes(session, param_data, changes):
     yaml_tags_sorted = sorted(yaml_tags, key=lambda k: k['Key'])
     aws_tags_sorted = sorted(aws_tags['TagList'], key=lambda k: k['Key'])
     pairs = zip(yaml_tags_sorted, aws_tags_sorted)
-    tags_changes = any(x != y for x, y in pairs)
+    tags_changes = any(x != y for x, y in pairs) or len(yaml_tags_sorted) != len(aws_tags_sorted)
 
-    if tags_changes or len(yaml_tags_sorted) != len(aws_tags_sorted):
+    if tags_changes:
         changes['ChangesList'].append(
             {
                 'Key': 'Tags',

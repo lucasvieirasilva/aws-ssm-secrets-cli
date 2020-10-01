@@ -14,9 +14,11 @@ from aws_secrets.miscellaneous import utils
 @click.option('-e', '--env-file', help="Environment YAML file", type=click.Path(), required=True)
 @click.option('--dry-run', help="Execution without apply the changes on the environment", is_flag=True)
 @click.option('--confirm', help="Confirm prompt before apply the changes", is_flag=True)
+@click.option('--only-secrets', help="Deploy only AWS Secrets", is_flag=True)
+@click.option('--only-parameters', help="Deploy only SSM Parameters", is_flag=True)
 @click.option('--profile', help="AWS Profile")
 @click.option('--region', help="AWS Region")
-def deploy(env_file, dry_run, confirm, profile, region):
+def deploy(env_file, dry_run, confirm, only_secrets, only_parameters, profile, region):
     session.aws_profile = profile
     session.aws_region = region
 
@@ -24,22 +26,22 @@ def deploy(env_file, dry_run, confirm, profile, region):
         yaml_data = yaml.safe_load(env.read())
 
     global_tags = yaml_data['tags'] if 'tags' in yaml_data else {}
-
     _session = session.session()
-
     kms_arn = str(yaml_data['kms']['arn'])
 
-    click.echo("Loading AWS Secrets Manager changes...")
-    if 'secrets' in yaml_data:
-        for secret in yaml_data['secrets']:
-            deploy_secret(
-                _session, secret, global_tags, kms_arn, dry_run, confirm)
+    if only_secrets == True or (only_secrets == False and only_parameters == False):
+        click.echo("Loading AWS Secrets Manager changes...")
+        if 'secrets' in yaml_data:
+            for secret in yaml_data['secrets']:
+                deploy_secret(
+                    _session, secret, global_tags, kms_arn, dry_run, confirm)
 
-    click.echo("Loading SSM parameter changes...")
-    if 'parameters' in yaml_data:
-        for parameter in yaml_data['parameters']:
-            deploy_parameter(
-                _session, parameter, global_tags, kms_arn, dry_run, confirm)
+    if only_parameters == True or (only_secrets == False and only_parameters == False):
+        click.echo("Loading SSM parameter changes...")
+        if 'parameters' in yaml_data:
+            for parameter in yaml_data['parameters']:
+                deploy_parameter(
+                    _session, parameter, global_tags, kms_arn, dry_run, confirm)
 
 
 def add_tags_to_secret(session, secret, tags):
@@ -107,9 +109,10 @@ def process_secret_changes(session, secret, changes, dry_run, confirm, kms_arn):
             aws_tags = tags_change['OldValue'] if tags_change is not None else [
             ]
 
+            remove_tags_from_secret(session, secret, aws_tags)
+
             tags = utils.parse_tags(secret)
             if len(tags) > 0:
-                remove_tags_from_secret(session, secret, aws_tags)
                 add_tags_to_secret(session, secret, tags)
 
 
@@ -231,15 +234,15 @@ def create_or_update_ssm_param(session, parameter, aws_tags, kms_arn):
 
     ssm.put_parameter(**put_parameter_args)
 
+    tags_key = list(map(lambda tag: tag['Key'], aws_tags))
+    ssm.remove_tags_from_resource(
+        ResourceType='Parameter',
+        ResourceId=parameter['name'],
+        TagKeys=tags_key
+    )
+
     tags = utils.parse_tags(parameter)
     if len(tags) > 0:
-        tags_key = list(map(lambda tag: tag['Key'], aws_tags))
-        ssm.remove_tags_from_resource(
-            ResourceType='Parameter',
-            ResourceId=parameter['name'],
-            TagKeys=tags_key
-        )
-
         ssm.add_tags_to_resource(
             ResourceType='Parameter',
             ResourceId=parameter['name'],
