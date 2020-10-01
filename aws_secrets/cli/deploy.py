@@ -32,17 +32,17 @@ def deploy(env_file, dry_run, confirm, profile, region):
     click.echo("Loading AWS Secrets Manager changes...")
     if 'secrets' in yaml_data:
         for secret in yaml_data['secrets']:
-            process_secret_changes(
+            deploy_secret(
                 _session, secret, global_tags, kms_arn, dry_run, confirm)
 
     click.echo("Loading SSM parameter changes...")
     if 'parameters' in yaml_data:
         for parameter in yaml_data['parameters']:
-            process_parameter_changes(
+            deploy_parameter(
                 _session, parameter, global_tags, kms_arn, dry_run, confirm)
 
 
-def process_secret_changes(session, secret, global_tags, kms_arn, dry_run, confirm):
+def deploy_secret(session, secret, global_tags, kms_arn, dry_run, confirm):
     secretsmanager = session.client('secretsmanager')
     merge_tags(secret, global_tags)
 
@@ -113,56 +113,77 @@ def process_secret_changes(session, secret, global_tags, kms_arn, dry_run, confi
                             )
 
 
-def process_parameter_changes(session, parameter, global_tags, kms_arn, dry_run, confirm):
+def print_parameter_changes(changes):
+    click.echo(f"--> Changes:")
+    for change_item in changes['ChangesList']:
+        click.echo(f"   --> {change_item['Key']}:")
+        click.echo(
+            f"          Old Value: {change_item['OldValue']}")
+        click.echo(
+            f"          New Value: {change_item['Value']}")
+
+
+def process_parameter_non_replaceable_attrs(session, parameter, changes):
+    ssm = session.client('ssm')
+
+    non_replaceable_attrs = list(filter(
+        lambda change: change['Replaceable'] == False, changes['ChangesList']))
+    if len(non_replaceable_attrs) > 0:
+        attrs = ", ".join(
+            list(map(lambda attr: attr['Key'], non_replaceable_attrs)))
+        if click.confirm(
+                f"   --> These attributes [{attrs}] cannot be updated, would you like to re-create this SSM parameter?"):
+            ssm.delete_parameter(
+                Name=parameter['name']
+            )
+            return True
+        else:
+            click.echo(
+                f"   --> Ignoring this SSM parameter")
+            return None
+
+    return False
+
+
+def deploy_parameter_changes(session, parameter, changes, kms_arn, dry_run, confirm):
+    if len(changes['ChangesList']) > 0:
+        print_parameter_name(parameter['name'])
+        print_parameter_changes(changes)
+
+        if not dry_run:
+            confirm_msg = "   --> Would you like to update this SSM parameter?"
+
+            has_non_replaceable_changes = process_parameter_non_replaceable_attrs(
+                session, parameter, changes)
+
+            if has_non_replaceable_changes == None:
+                return
+
+            if (has_non_replaceable_changes == False and confirm and click.confirm(confirm_msg)) or confirm == False:
+                tags_change = next(
+                    (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
+
+                aws_tags = tags_change['OldValue'] if tags_change is not None else [
+                ]
+
+                create_or_update_ssm_param(
+                    session, parameter, aws_tags, kms_arn)
+
+
+def deploy_parameter(session, parameter, global_tags, kms_arn, dry_run, confirm):
     merge_tags(parameter, global_tags)
     changes = get_parameter_changes(session, parameter, kms_arn)
-    ssm = session.client('ssm')
 
     if not changes['Exists']:
         print_parameter_name(parameter['name'])
         click.echo("--> New Parameter")
 
-        if not dry_run and confirm and click.confirm("--> Would you to create this SSM parameter?"):
+        if (not dry_run and confirm and click.confirm("--> Would you to create this SSM parameter?")) or (not dry_run and confirm == False):
             create_or_update_ssm_param(
                 session, parameter, [], kms_arn)
     else:
-        if len(changes['ChangesList']) > 0:
-            print_parameter_name(parameter['name'])
-            click.echo(f"--> Changes:")
-            for change_item in changes['ChangesList']:
-                click.echo(f"   --> {change_item['Key']}:")
-                click.echo(
-                    f"          Old Value: {change_item['OldValue']}")
-                click.echo(
-                    f"          New Value: {change_item['Value']}")
-
-            non_replaceable_attrs = list(filter(
-                lambda change: change['Replaceable'] == False, changes['ChangesList']))
-
-            if not dry_run:
-                confirm_msg = "   --> Would you like to update this SSM parameter?"
-                if len(non_replaceable_attrs) > 0:
-                    attrs = ", ".join(
-                        list(map(lambda attr: attr['Key'], non_replaceable_attrs)))
-                    if click.confirm(
-                            f"   --> These attributes [{attrs}] cannot be updated, do you would like to re-create this SSM parameter?"):
-                        confirm_msg = "Would you like to recreate this SSM parameter?"
-                        ssm.delete_parameter(
-                            Name=parameter['name']
-                        )
-                    else:
-                        click.echo(
-                            f"   --> Ignoring this SSM parameter")
-                        return
-
-                if confirm and click.confirm(confirm_msg):
-                    tags_change = next(
-                        (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
-                    aws_tags = tags_change['OldValue'] if tags_change is not None else [
-                    ]
-
-                    create_or_update_ssm_param(
-                        session, parameter, aws_tags, kms_arn)
+        deploy_parameter_changes(
+            session, parameter, changes, kms_arn, dry_run, confirm)
 
 
 def create_secret(session, secret, kms_arn):
