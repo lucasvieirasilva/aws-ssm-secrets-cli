@@ -29,19 +29,28 @@ def deploy(env_file, dry_run, confirm, only_secrets, only_parameters, profile, r
     _session = session.session()
     kms_arn = str(yaml_data['kms']['arn'])
 
+    process_secrets(_session, yaml_data, global_tags, kms_arn,
+                    dry_run, confirm, only_secrets, only_parameters)
+    process_parameters(_session, yaml_data, global_tags, kms_arn,
+                       dry_run, confirm, only_secrets, only_parameters)
+
+
+def process_secrets(session, yaml_data, global_tags, kms_arn, dry_run, confirm, only_secrets, only_parameters):
     if only_secrets == True or (only_secrets == False and only_parameters == False):
         click.echo("Loading AWS Secrets Manager changes...")
         if 'secrets' in yaml_data:
             for secret in yaml_data['secrets']:
                 deploy_secret(
-                    _session, secret, global_tags, kms_arn, dry_run, confirm)
+                    session, secret, global_tags, kms_arn, dry_run, confirm)
 
+
+def process_parameters(session, yaml_data, global_tags, kms_arn, dry_run, confirm, only_secrets, only_parameters):
     if only_parameters == True or (only_secrets == False and only_parameters == False):
         click.echo("Loading SSM parameter changes...")
         if 'parameters' in yaml_data:
             for parameter in yaml_data['parameters']:
                 deploy_parameter(
-                    _session, parameter, global_tags, kms_arn, dry_run, confirm)
+                    session, parameter, global_tags, kms_arn, dry_run, confirm)
 
 
 def add_tags_to_secret(session, secret, tags):
@@ -62,6 +71,7 @@ def remove_tags_from_secret(session, secret, aws_tags):
         SecretId=secret['name'],
         TagKeys=tags_key
     )
+
 
 def delete_secret(session, secret):
     secretsmanager = session.client('secretsmanager')
