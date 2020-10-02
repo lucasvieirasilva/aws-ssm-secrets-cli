@@ -3,7 +3,7 @@ import yaml
 import boto3
 import base64
 from botocore.exceptions import ClientError
-from aws_secrets.miscellaneous import kms
+from aws_secrets.miscellaneous.kms import encrypt
 from aws_secrets.miscellaneous import session
 
 
@@ -13,7 +13,7 @@ from aws_secrets.miscellaneous import session
 @click.option('-k', '--kms')
 @click.option('--profile')
 @click.option('--region')
-def set_secret(env_file, name, type, kms, profile, region):
+def set_secret(env_file, name, kms, profile, region):
     session.aws_profile = profile
     session.aws_region = region
     
@@ -48,7 +48,7 @@ def set_secret(env_file, name, type, kms, profile, region):
 
     value = '\n'.join(contents)
 
-    encrypted_value = kms.encrypt(session.session(), value, kms_arn)
+    encrypted_value = encrypt(session.session(), value, kms_arn)
     secret['value'] = encrypted_value.decode('utf-8')
 
     with open(env_file, 'w') as outfile:
