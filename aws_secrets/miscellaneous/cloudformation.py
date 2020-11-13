@@ -15,5 +15,4 @@ def get_output_value(session, stack_name, output_name):
     if output is None:
         raise Exception(f'output {output_name} not found on stack {stack_name}')
 
-
     return output['OutputValue']

@@ -1,9 +1,6 @@
 import click
 import yaml
-import os
-import sys
 from aws_secrets.tags import OutputStackTag, CmdTag
-from aws_secrets.miscellaneous import session
 from aws_secrets.cli.set_parameter import set_parameter
 from aws_secrets.cli.set_secret import set_secret
 from aws_secrets.cli.view_parameter import view_parameter

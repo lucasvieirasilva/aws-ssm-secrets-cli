@@ -1,8 +1,5 @@
 import click
 import yaml
-import boto3
-import base64
-from botocore.exceptions import ClientError
 from aws_secrets.miscellaneous.kms import encrypt
 from aws_secrets.miscellaneous import session
 
@@ -16,11 +13,11 @@ from aws_secrets.miscellaneous import session
 def set_secret(env_file, name, kms, profile, region):
     session.aws_profile = profile
     session.aws_region = region
-    
+
     with open(env_file, 'r') as env:
         yaml_data = yaml.safe_load(env.read())
 
-    if not 'secrets' in yaml_data:
+    if 'secrets' not in yaml_data:
         yaml_data['secrets'] = []
 
     secret = next(
