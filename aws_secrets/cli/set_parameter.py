@@ -1,8 +1,5 @@
 import click
 import yaml
-import boto3
-import base64
-from botocore.exceptions import ClientError
 from aws_secrets.miscellaneous.kms import encrypt
 from aws_secrets.miscellaneous import session
 
@@ -22,7 +19,7 @@ def set_parameter(env_file, name, type, kms, profile, region):
     with open(env_file, 'r') as env:
         yaml_data = yaml.safe_load(env.read())
 
-    if not 'parameters' in yaml_data:
+    if 'parameters' not in yaml_data:
         yaml_data['parameters'] = []
 
     parameter = next(
@@ -48,7 +45,7 @@ def set_parameter(env_file, name, type, kms, profile, region):
         contents.append(line)
 
     value = '\n'.join(contents)
-    
+
     if parameter['type'] == 'SecureString':
         kms_arn = str(yaml_data['kms']['arn'])
         print('Encrypting the value')

@@ -1,6 +1,5 @@
 import yaml
 import subprocess
-import os
 from aws_secrets.miscellaneous.cloudformation import get_output_value
 from aws_secrets.miscellaneous.session import session
 
@@ -16,7 +15,7 @@ class CmdTag(yaml.YAMLObject):
             return
 
         variable = self.value[self.value.find("${")+2:self.value.find("}")]
-        
+
         provider = variable.split(":")[0]
         value = variable.split(":")[1]
         stack_name = value.split(".")[0]

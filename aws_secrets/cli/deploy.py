@@ -1,9 +1,6 @@
 import click
 import yaml
-import base64
-import boto3
 import fnmatch
-from botocore.exceptions import ClientError
 from aws_secrets.miscellaneous import kms
 from aws_secrets.miscellaneous import session
 from aws_secrets.miscellaneous.ssm import get_parameter_changes, parse_yaml_parameter_value

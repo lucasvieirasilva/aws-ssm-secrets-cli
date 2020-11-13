@@ -1,10 +1,8 @@
 import click
 import yaml
-import boto3
-import base64
-from botocore.exceptions import ClientError
 from aws_secrets.miscellaneous import kms
 from aws_secrets.miscellaneous import session
+
 
 @click.command(name='view-secret')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
@@ -25,7 +23,7 @@ def view_secret(env_file, name, profile, region):
         raise Exception(f'secret {name} not found')
 
     kms_arn = str(yaml_data['kms']['arn'])
-    
+
     param_value = kms.decrypt(
         session.session(), str(secret['value']), kms_arn).decode('utf-8')
 

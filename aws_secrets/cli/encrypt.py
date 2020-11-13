@@ -1,9 +1,6 @@
 import click
 import yaml
-import base64
-import boto3
 import json
-from botocore.exceptions import ClientError
 from aws_secrets.miscellaneous import kms
 from aws_secrets.miscellaneous import session
 
@@ -20,10 +17,10 @@ def encrypt(env_file, profile, region):
 
     kms_arn = str(data['kms']['arn'])
 
-    if not 'secrets' in data:
+    if 'secrets' not in data:
         data['secrets'] = []
 
-    if not 'parameters' in data:
+    if 'parameters' not in data:
         data['parameters'] = []
 
     _session = session.session()

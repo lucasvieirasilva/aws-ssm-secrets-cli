@@ -13,7 +13,8 @@ class OutputStackTag(yaml.YAMLObject):
         stack_args = self.stack.split('.')
         if len(stack_args) != 2:
             raise Exception(
-                f'value {self.stack} is invalid, the correct way to fill this information is <stack-name>.<output-name>')
+                f'value {self.stack} is invalid, the correct way to ' +
+                'fill this information is <stack-name>.<output-name>')
 
         stack_name = stack_args[0]
         output_name = stack_args[1]

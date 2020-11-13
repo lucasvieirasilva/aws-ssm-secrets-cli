@@ -1,10 +1,8 @@
 import click
 import yaml
-import boto3
-import base64
-from botocore.exceptions import ClientError
 from aws_secrets.miscellaneous import kms
 from aws_secrets.miscellaneous import session
+
 
 @click.command(name='view-parameter')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
@@ -27,7 +25,7 @@ def view_parameter(env_file, name, non_decrypt, profile, region):
 
     if parameter['type'] == 'SecureString' and not non_decrypt:
         kms_arn = str(yaml_data['kms']['arn'])
-        
+
         param_value = kms.decrypt(
             session.session(), str(parameter['value']), kms_arn).decode('utf-8')
 
