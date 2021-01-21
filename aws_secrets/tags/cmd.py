@@ -26,8 +26,9 @@ class CmdTag(yaml.YAMLObject):
 
             self.value = self.value.replace(self.value[self.value.find("${"):self.value.find("}")+1], output_value)
         elif provider == 'session':
-            if value != 'profile' or value != 'region':
-                raise Exception('Provider `session` just supports `profile` and `region` properties')
+            if value != 'profile' and value != 'region':
+                raise Exception(f'Property `{value}` is not supported, ' +
+                                'provider `session` just supports `profile` and `region` properties')
 
             output_value = ''
 
