@@ -9,4 +9,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Add `session` resolver for `!cmd` resolvr [issue-14](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/14)
+- Add `session` resolver for `!cmd` resolver [issue-14](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/14)
