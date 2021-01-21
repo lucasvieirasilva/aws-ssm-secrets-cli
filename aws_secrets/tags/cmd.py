@@ -1,7 +1,7 @@
 import yaml
 import subprocess
+from aws_secrets.miscellaneous import session
 from aws_secrets.miscellaneous.cloudformation import get_output_value
-from aws_secrets.miscellaneous.session import session
 
 
 class CmdTag(yaml.YAMLObject):
@@ -18,11 +18,23 @@ class CmdTag(yaml.YAMLObject):
 
         provider = variable.split(":")[0]
         value = variable.split(":")[1]
-        stack_name = value.split(".")[0]
-        output_name = value.split(".")[1]
 
         if provider == 'cf':
-            output_value = get_output_value(session(), stack_name, output_name)
+            stack_name = value.split(".")[0]
+            output_name = value.split(".")[1]
+            output_value = get_output_value(session.session(), stack_name, output_name)
+
+            self.value = self.value.replace(self.value[self.value.find("${"):self.value.find("}")+1], output_value)
+        elif provider == 'session':
+            if value != 'profile' or value != 'region':
+                raise Exception('Provider `session` just supports `profile` and `region` properties')
+
+            output_value = ''
+
+            if value == 'profile':
+                output_value = session.aws_profile
+            elif value == 'region':
+                output_value = session.aws_region
 
             self.value = self.value.replace(self.value[self.value.find("${"):self.value.find("}")+1], output_value)
         else:
