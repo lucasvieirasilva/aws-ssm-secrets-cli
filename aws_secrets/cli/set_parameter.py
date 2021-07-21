@@ -7,13 +7,14 @@ from aws_secrets.miscellaneous import session
 @click.command(name='set-parameter')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('-n', '--name', prompt=True, required=True)
+@click.option('-d', '--description', help='SSM Parameter Description', required=False)
 @click.option('-t', '--type',
               required=True, type=click.Choice(['String', 'SecureString'], case_sensitive=True),
               default='SecureString')
 @click.option('-k', '--kms')
 @click.option('--profile')
 @click.option('--region')
-def set_parameter(env_file, name, type, kms, profile, region):
+def set_parameter(env_file, name, description, type, kms, profile, region):
     session.aws_profile = profile
     session.aws_region = region
     with open(env_file, 'r') as env:
@@ -31,6 +32,9 @@ def set_parameter(env_file, name, type, kms, profile, region):
             'type': type,
         }
         yaml_data['parameters'].append(parameter)
+
+    if description:
+        parameter['description'] = description
 
     if kms:
         parameter['kms'] = kms
