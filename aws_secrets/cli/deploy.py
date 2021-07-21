@@ -139,14 +139,16 @@ def process_secret_changes(session, secret, changes, dry_run, confirm, kms_arn):
         has_non_replaceable_changes = process_non_replaceable_attrs(
             session, secret, changes, non_replaceable_action)
 
-        if has_non_replaceable_changes == None:
+        if has_non_replaceable_changes is None:
             return
 
-        if (has_non_replaceable_changes == False and confirm and click.confirm(confirm_msg)) or (has_non_replaceable_changes == False and confirm == False):
+        if (has_non_replaceable_changes is False and confirm and click.confirm(confirm_msg)) \
+                or (has_non_replaceable_changes is False and confirm is False):
             update_secret(session, secret, kms_arn)
 
             tags_change = next(
                 (c for c in changes['ChangesList'] if c['Key'] == 'Tags'), None)
+
             aws_tags = tags_change['OldValue'] if tags_change is not None else [
             ]
 
@@ -265,14 +267,19 @@ def create_secret(session, secret, kms_arn):
 def create_or_update_ssm_param(session, parameter, changes, kms_arn):
     ssm = session.client('ssm')
 
-    if changes['Exists'] == False or next((c for c in changes['ChangesList'] if c['Key'] != 'Tags'), None):
+    properties_changes = next((c for c in changes['ChangesList'] if c['Key'] != 'Tags'), None)
+
+    if not changes['Exists'] or properties_changes:
         put_parameter_args = {
             'Name': parameter['name'],
             'Description': parameter['description'] if 'description' in parameter else '',
             'Value': parse_yaml_parameter_value(session, parameter, kms_arn),
             'Type': parameter['type'],
-            'Overwrite': True
+            'Overwrite': changes['Exists']
         }
+
+        if not changes['Exists']:
+            put_parameter_args['Tags'] = utils.parse_tags(parameter)
 
         if 'kms' in parameter:
             put_parameter_args['KeyId'] = parameter['kms']
