@@ -28,7 +28,7 @@ Example using CloudFormation:
 
 ```yaml
 Description: "KMS Key for Secrest"
-Resources: 
+Resources:
   Key:
     Type: AWS::KMS::Key
     Properties:
@@ -52,7 +52,7 @@ Resources:
               - kms:UntagResource
             Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
             Resource: "*"
           - Action:
               - kms:Decrypt
@@ -61,7 +61,7 @@ Resources:
               - kms:GenerateDataKey*
             Effect: Allow
             Principal:
-              AWS: !Sub 'arn:aws:iam::${AWS::AccountId}:root'
+              AWS: !Sub "arn:aws:iam::${AWS::AccountId}:root"
             Resource: "*"
         Version: "2012-10-17"
       Description: AWS KMS Key for secrets
@@ -90,20 +90,21 @@ For naming convention, you should give the environment name for the file name (e
 kms:
   arn: KMS_KEY_ARN (String) #Required
 parameters:
-- name: myparametername
-  value: 'MySecretValueHere'
-  type: SecureString
+  - name: myparametername
+    value: "MySecretValueHere"
+    type: SecureString
 secrets:
-- name: mysecretname
-  value: 'MySecretValueHere' # or value: 
-                             #      prop: 'Value' 
+  - name: mysecretname
+    value:
+      "MySecretValueHere" # or value:
+      #      prop: 'Value'
 ```
 
 #### Encrypt
 
 To encrypt the parameter values, you need to use this command:
 
-``` shell
+```shell
 aws-secrets encrypt -e dev.yaml --profile myprofile --region eu-west-1
 ```
 
@@ -111,19 +112,19 @@ aws-secrets encrypt -e dev.yaml --profile myprofile --region eu-west-1
 
 To edit the values, you can decrypt and re-encrypt the parameter values. You need to use this command:
 
-``` shell
+```shell
 aws-secrets decrypt -e dev.yaml --profile myprofile --region eu-west-1
 ```
 
 At this moment, a new file has created `dev.yaml.dec`. If you want to decrypt in overwrite mode put the `--output` option with the same file name that you are decrypting.
 
-``` shell
+```shell
 aws-secrets decrypt -e dev.yaml --output dev.yaml --profile myprofile --region eu-west-1
 ```
 
 After your changes you need to re-encrypt, you can do it using this command:
 
-``` shell
+```shell
 aws-secrets encrypt -e dev.yaml --profile myprofile --region eu-west-1
 ```
 
@@ -131,7 +132,7 @@ aws-secrets encrypt -e dev.yaml --profile myprofile --region eu-west-1
 
 To deploy the parameter that you created on the last step, you need to execute this command:
 
-``` shell
+```shell
 aws-secrets deploy -e dev.yaml --profile myaws-profile --region eu-west-1
 ```
 
@@ -141,7 +142,7 @@ Now your parameters have been created in AWS Account.
 
 Command options differ depending on the command, and can be found by running:
 
-``` shell
+```shell
 aws-secrets --help
 aws-secrets COMMAND --help
 ```
@@ -150,48 +151,49 @@ aws-secrets COMMAND --help
 
 To encrypt SecureString parameters and secrets values in the environment file.
 
-``` shell
+```shell
 aws-secrets encrypt
-  --env-file 
+  --env-file
   [--profile]
   [--region]
 ```
 
 ### Options
 
-| Option | Description | Data Type | Required | Options | Default |
-|--|--|--|--|--|--|
-| `--env-file` or `-e` | Environment file path | `String` | `true` |
-| `--profile` | AWS Profile | `String` | `false` |  |  |
-| `--region` | AWS Region | `String` | `false` |  |  |
+| Option               | Description           | Data Type | Required | Options | Default |
+| -------------------- | --------------------- | --------- | -------- | ------- | ------- |
+| `--env-file` or `-e` | Environment file path | `String`  | `true`   |         |         |
+| `--profile`          | AWS Profile           | `String`  | `false`  |         |         |
+| `--region`           | AWS Region            | `String`  | `false`  |         |         |
 
 ### decrypt
 
 To decrypt SecureString parameters and secrets values in the environment file.
 
-``` shell
+```shell
 aws-secrets decrypt
-  --env-file 
+  --env-file
   [--profile]
   [--region]
 ```
 
 ### Options
 
-| Option | Description | Data Type | Required | Options | Default |
-|--|--|--|--|--|--|
-| `--env-file` or `-e` | Environment file path | `String` | `true` |
-| `--profile` | AWS Profile | `String` | `false` |  |  |
-| `--region` | AWS Region | `String` | `false` |  |  |
+| Option               | Description           | Data Type | Required | Options | Default |
+| -------------------- | --------------------- | --------- | -------- | ------- | ------- |
+| `--env-file` or `-e` | Environment file path | `String`  | `true`   |         |         |
+| `--profile`          | AWS Profile           | `String`  | `false`  |         |         |
+| `--region`           | AWS Region            | `String`  | `false`  |         |         |
 
 ### set-parameter
 
 Create or modify the SSM parameter in the environment file.
 
-``` shell
-aws-secrets set-parameter 
-  --env-file 
+```shell
+aws-secrets set-parameter
+  --env-file
   --name
+  [--description]
   [--kms]
   [--type]
   [--profile]
@@ -200,23 +202,25 @@ aws-secrets set-parameter
 
 ### Options
 
-| Option | Description | Data Type | Required | Options | Default |
-|--|--|--|--|--|--|
-| `--env-file` or `-e` | Environment file path | `String` | `true` |
-| `--name` or `-n` | SSM Parameter Name | `String` | `true` |  |  |
-| `--type` or `-t` | SSM Parameter Type | `String` | `true` | `String` and `SecureString` | `SecureString` |
-| `--kms` or `-k` | KMS Id or ARN | `String` | `true` |  |  |
-| `--profile` | AWS Profile | `String` | `false` |  |  |
-| `--region` | AWS Region | `String` | `false` |  |  |
+| Option                  | Description               | Data Type | Required | Options                     | Default        |
+| ----------------------- | ------------------------- | --------- | -------- | --------------------------- | -------------- |
+| `--env-file` or `-e`    | Environment file path     | `String`  | `true`   |
+| `--name` or `-n`        | SSM Parameter Name        | `String`  | `true`   |                             |                |
+| `--description` or `-d` | SSM Parameter Description | `String`  | `false`  |                             |                |
+| `--type` or `-t`        | SSM Parameter Type        | `String`  | `true`   | `String` and `SecureString` | `SecureString` |
+| `--kms` or `-k`         | KMS Id or ARN             | `String`  | `true`   |                             |                |
+| `--profile`             | AWS Profile               | `String`  | `false`  |                             |                |
+| `--region`              | AWS Region                | `String`  | `false`  |                             |                |
 
 ### set-secret
 
 Create or modify secrets in the environment file.
 
-``` shell
+```shell
 aws-secrets set-secret
-  --env-file 
+  --env-file
   --name
+  [--description]
   [--kms]
   [--profile]
   [--region]
@@ -224,21 +228,22 @@ aws-secrets set-secret
 
 ### Options
 
-| Option | Description | Data Type | Required | Options | Default |
-|--|--|--|--|--|--|
-| `--env-file` or `-e` | Environment file path | `String` | `true` |
-| `--name` or `-n` | SSM Parameter Name | `String` | `true` |  |  |
-| `--kms` or `-k` | KMS Id or ARN | `String` | `true` |  |  |
-| `--profile` | AWS Profile | `String` | `false` |  |  |
-| `--region` | AWS Region | `String` | `false` |  |  |
+| Option                  | Description           | Data Type | Required | Options | Default |
+| ----------------------- | --------------------- | --------- | -------- | ------- | ------- |
+| `--env-file` or `-e`    | Environment file path | `String`  | `true`   |         |         |
+| `--name` or `-n`        | Secret Name           | `String`  | `true`   |         |         |
+| `--description` or `-d` | Secret Description    | `String`  | `false`  |         |         |
+| `--kms` or `-k`         | KMS Id or ARN         | `String`  | `true`   |         |         |
+| `--profile`             | AWS Profile           | `String`  | `false`  |         |         |
+| `--region`              | AWS Region            | `String`  | `false`  |         |         |
 
 ### view-parameter
 
 View the SSM parameter value in the environment file.
 
-``` shell
+```shell
 aws-secrets view-parameter
-  --env-file 
+  --env-file
   --name
   [--non-decrypt]
   [--profile]
@@ -247,21 +252,21 @@ aws-secrets view-parameter
 
 ### Options
 
-| Option | Description | Data Type | Required | Options | Default |
-|--|--|--|--|--|--|
-| `--env-file` or `-e` | Environment file path | `String` | `true` |
-| `--name` or `-n` | SSM Parameter Name | `String` | `true` |  |  |
-| `--non-decrypt` | Used when you want to view an SecureString value without decrypt | `Boolean` | `false` |  | `false` |
-| `--profile` | AWS Profile | `String` | `false` |  |  |
-| `--region` | AWS Region | `String` | `false` |  |  |
+| Option               | Description                                                      | Data Type | Required | Options | Default |
+| -------------------- | ---------------------------------------------------------------- | --------- | -------- | ------- | ------- |
+| `--env-file` or `-e` | Environment file path                                            | `String`  | `true`   |         |         |
+| `--name` or `-n`     | SSM Parameter Name                                               | `String`  | `true`   |         |         |
+| `--non-decrypt`      | Used when you want to view an SecureString value without decrypt | `Boolean` | `false`  |         | `false` |
+| `--profile`          | AWS Profile                                                      | `String`  | `false`  |         |         |
+| `--region`           | AWS Region                                                       | `String`  | `false`  |         |         |
 
 ### deploy
 
 Create or update SSM parameters and secrets in the AWS Account.
 
-``` shell
+```shell
 aws-secrets deploy
-  --env-file 
+  --env-file
   [--filter-pattern]
   [--dry-run]
   [--confirm]
@@ -273,16 +278,16 @@ aws-secrets deploy
 
 ### Options
 
-| Option | Description | Data Type | Required | Options | Default |
-|--|--|--|--|--|--|
-| `--env-file` or `-e` | Environment file path | `String` | `true` |
-| `--filter-pattern` | Filter Pattern (e.g `/app/db/*/password` match with `/app/db/dev/password` or `/app/db/prod/password` ) | `String` | `false` |
-| `--dry-run` | Execution without apply the changes on the environment | `Boolean` | `false` |  | `false` |
-| `--confirm` | Confirm prompt before apply the changes | `Boolean` | `false` |  | `false` |
-| `--only-secrets` | Apply changes just for AWS Secrets | `Boolean` | `false` |  | `false` |
-| `--only-parameters` |  Apply changes just for SSM Parameters | `Boolean` | `false` |  | `false` |
-| `--profile` | AWS Profile | `String` | `false` |  |  |
-| `--region` | AWS Region | `String` | `false` |  |  |
+| Option               | Description                                                                                             | Data Type | Required | Options | Default |
+| -------------------- | ------------------------------------------------------------------------------------------------------- | --------- | -------- | ------- | ------- |
+| `--env-file` or `-e` | Environment file path                                                                                   | `String`  | `true`   |         |         |
+| `--filter-pattern`   | Filter Pattern (e.g `/app/db/*/password` match with `/app/db/dev/password` or `/app/db/prod/password` ) | `String`  | `false`  |         |         |
+| `--dry-run`          | Execution without apply the changes on the environment                                                  | `Boolean` | `false`  |         | `false` |
+| `--confirm`          | Confirm prompt before apply the changes                                                                 | `Boolean` | `false`  |         | `false` |
+| `--only-secrets`     | Apply changes just for AWS Secrets                                                                      | `Boolean` | `false`  |         | `false` |
+| `--only-parameters`  | Apply changes just for SSM Parameters                                                                   | `Boolean` | `false`  |         | `false` |
+| `--profile`          | AWS Profile                                                                                             | `String`  | `false`  |         |         |
+| `--region`           | AWS Region                                                                                              | `String`  | `false`  |         |         |
 
 ### Resolvers
 
@@ -296,11 +301,11 @@ Example:
 
 ```yaml
 kms:
-  arn: !cf_output 'mystack.MyOutputKey'
+  arn: !cf_output "mystack.MyOutputKey"
 parameters:
   - name: myparameter-name
     type: String
-    value: !cf_output 'mystack.MyOutputKey'
+    value: !cf_output "mystack.MyOutputKey"
 ```
 
 #### !cmd
@@ -311,7 +316,7 @@ Example:
 
 ```yaml
 kms:
-  arn: 'arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab'
+  arn: "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
 parameters:
   - name: myparameter-name
     type: SecureString
@@ -319,7 +324,6 @@ parameters:
     decryptOnDeploy: false
 ```
 
->
 > If you use `!cmd` resolver with `SecureString`, you must disable the decryption action on the deployment. Otherwise, the CLI will try to decrypt the resolved value, and the process will be failed.
 
 ##### providers
@@ -352,9 +356,7 @@ You also can include Tags on a global level:
 tags:
   SomeKey: SomeValue
 kms:
-  arn: 'arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab'
-parameters:
-  ...
-secrets:
-  ...
+  arn: "arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"
+parameters: ...
+secrets: ...
 ```

@@ -7,10 +7,11 @@ from aws_secrets.miscellaneous import session
 @click.command(name='set-secret')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('-n', '--name', required=True)
+@click.option('-d', '--description', help='Secret Description', required=False)
 @click.option('-k', '--kms')
 @click.option('--profile')
 @click.option('--region')
-def set_secret(env_file, name, kms, profile, region):
+def set_secret(env_file, name, description, kms, profile, region):
     session.aws_profile = profile
     session.aws_region = region
 
@@ -28,6 +29,9 @@ def set_secret(env_file, name, kms, profile, region):
             'name': name
         }
         yaml_data['secrets'].append(secret)
+
+    if description:
+        secret['description'] = description
 
     if kms:
         secret['kms'] = kms
