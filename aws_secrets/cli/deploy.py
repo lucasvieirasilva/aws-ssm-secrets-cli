@@ -168,7 +168,7 @@ def deploy_secret(session, secret, global_tags, kms_arn, dry_run, confirm):
         print_secret_name(secret['name'])
         click.echo("--> New Secret")
 
-        if not dry_run and confirm and click.confirm("--> Would you to create this secret?"):
+        if not dry_run or (confirm and click.confirm("--> Would you to create this secret?")):
             create_secret(session, secret, kms_arn)
             return True
     else:
