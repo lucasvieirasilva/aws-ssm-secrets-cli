@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [1.2.0] - 2021-08-20
+
+### Added
+
+- Add `aws` provider in the `!cmd` YAML tag to resolve `--profile` and `--region` AWS CLI options. [issue-23](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/23)
+
+### Changed
+
+- Modify `!cmd` YAML tag to support default values for the provide resolvers. [issue-23](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/23)
+
 ## [1.1.0] - 2021-07-21
 
 ### Fixed
