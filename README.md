@@ -338,6 +338,12 @@ Usage
 ${cf:stack-name.output-name}
 ```
 
+With default values
+
+```text
+${cf:stack-name.output-name, 'mydefaultvalue'}
+```
+
 ###### session
 
 AWS Credentials Session resolver
@@ -347,6 +353,70 @@ Usage
 ```text
 ${session:profile} or ${session:region}
 ```
+
+With default values
+
+```text
+${session:profile, 'myprofile'} or ${session:region, 'us-east-1'}
+```
+
+###### aws
+
+AWS Provider resolves the AWS CLI `--profile` and `--region` based on the `aws-secrets` CLI.
+
+Usage
+
+```text
+${aws:profile} or ${aws:region}
+```
+
+With default values
+
+```text
+${aws:profile, 'myprofile'} or ${aws:region, 'us-east-1'}
+```
+
+**Example**:
+
+With the config file:
+
+``` yaml
+kms:
+  arn: !cf_output 'mystack.KeyArn'
+parameters:
+- decryptOnDeploy: false
+  description: My SSM Parameter
+  name: /my/ssm/param
+  type: SecureString
+  value: !cmd 'aws s3 ls ${aws:profile} ${aws:region, "eu-west-1"}'
+
+```
+
+When run the `aws-secrets` with the `--profile` or `--region`
+
+```shell
+aws-secrets -e conf.yaml --profile myprofile --region us-east-1
+```
+
+The AWS CLI command will be execute this command:
+
+```shell
+aws s3 ls --profile myprofile --region us-east-1
+```
+
+If `--profile` not be speficied in the `aws-secrets` execution, like this:
+
+```shell
+aws-secrets -e conf.yaml --region us-east-1
+```
+
+The AWS CLI command will be execute this command:
+
+```shell
+aws s3 ls --region eu-west-1
+```
+
+> The `--region` continue in the command because the resolver has the default value with `eu-west-1` in the config file.
 
 ### Global Tags
 

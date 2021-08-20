@@ -1,3 +1,4 @@
+import click
 import yaml
 import subprocess
 from aws_secrets.miscellaneous import session
@@ -18,33 +19,81 @@ class CmdTag(yaml.YAMLObject):
 
         provider = variable.split(":")[0]
         value = variable.split(":")[1]
+        default_value = ''
+
+        if ',' in value:
+            default_value = value.split(',')[1] \
+                .replace('"', '') \
+                .replace("'", '') \
+                .strip()
+            value = value.split(',')[0].strip()
 
         if provider == 'cf':
-            stack_name = value.split(".")[0]
-            output_name = value.split(".")[1]
-            output_value = get_output_value(session.session(), stack_name, output_name)
-
-            self.value = self.value.replace(self.value[self.value.find("${"):self.value.find("}")+1], output_value)
+            self.resolve_cf_provider(value, default_value)
         elif provider == 'session':
-            if value != 'profile' and value != 'region':
-                raise Exception(f'Property `{value}` is not supported, ' +
-                                'provider `session` just supports `profile` and `region` properties')
-
-            output_value = ''
-
-            if value == 'profile':
-                output_value = session.aws_profile
-            elif value == 'region':
-                output_value = session.aws_region
-
-            self.value = self.value.replace(self.value[self.value.find("${"):self.value.find("}")+1], output_value)
+            self.resolve_session_provider(value, default_value)
+        elif provider == 'aws':
+            self.resolve_aws_provider(value, default_value)
         else:
-            raise Exception(f'Provider {provider} is not supported')
+            raise RuntimeError(f'Provider {provider} is not supported')
 
         self.resolve_variables()
+
+    def resolve_aws_provider(self, value, default_value):
+        self.check_aws_properties(value)
+
+        output_value = ''
+
+        if value == 'profile':
+            base_option = '--profile'
+            if session.aws_profile:
+                output_value = f'{base_option} {session.aws_profile}'
+            elif default_value != '':
+                output_value = f'{base_option} {default_value}'
+        elif value == 'region':
+            base_option = '--region'
+            if session.aws_region:
+                output_value = f'{base_option} {session.aws_region}'
+            elif default_value != '':
+                output_value = f'{base_option} {default_value}'
+
+        self.resolve_value(output_value)
+
+    def resolve_session_provider(self, value, default_value):
+        self.check_aws_properties(value)
+
+        output_value = default_value
+
+        if value == 'profile' and session.aws_profile:
+            output_value = session.aws_profile
+        elif value == 'region' and session.aws_region:
+            output_value = session.aws_region
+
+        self.resolve_value(output_value)
+
+    def resolve_cf_provider(self, value, default_value):
+        stack_name = value.split(".")[0]
+        output_name = value.split(".")[1]
+        output_value = get_output_value(session.session(), stack_name, output_name)
+
+        if not output_value:
+            output_value = default_value
+
+        self.resolve_value(output_value)
+
+    def resolve_value(self, output_value):
+        self.value = self.value.replace(self.value[self.value.find("${"):self.value.find("}")+1], output_value)
+
+    def check_aws_properties(self, value):
+        allowed_values = ['profile', 'region']
+        if value not in allowed_values:
+            raise RuntimeError(f'Property `{value}` is not supported, ' +
+                               f'provider `session` just supports {allowed_values} properties')
 
     def __repr__(self):
         self.resolve_variables()
+
+        click.echo(f"Running command: {self.value}")
 
         proc = subprocess.Popen(self.value.split(" "), stdout=subprocess.PIPE)
         output = proc.stdout.read()
