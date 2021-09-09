@@ -1,6 +1,6 @@
 import click
-import yaml
-from aws_secrets.miscellaneous import kms
+from aws_secrets.config.config_reader import ConfigReader
+from aws_secrets.helpers.catch_exceptions import CLIError, catch_exceptions
 from aws_secrets.miscellaneous import session
 
 
@@ -9,22 +9,16 @@ from aws_secrets.miscellaneous import session
 @click.option('-n', '--name', required=True)
 @click.option('--profile')
 @click.option('--region')
+@catch_exceptions
 def view_secret(env_file, name, profile, region):
     session.aws_profile = profile
     session.aws_region = region
 
-    with open(env_file, 'r') as env:
-        yaml_data = yaml.safe_load(env.read())
-
-    secret = next(
-        (param for param in yaml_data['secrets'] if param['name'] == name), None)
+    config = ConfigReader(env_file)
+    provider = config.get_provider('secrets')
+    secret = provider.find(name)
 
     if secret is None:
-        raise Exception(f'secret {name} not found')
+        raise CLIError(f'secret {name} not found')
 
-    kms_arn = str(yaml_data['kms']['arn'])
-
-    param_value = kms.decrypt(
-        session.session(), str(secret['value']), kms_arn).decode('utf-8')
-
-    print(param_value)
+    click.echo(secret.decrypt())

@@ -1,7 +1,11 @@
+import logging
+
 import click
-import yaml
-from aws_secrets.miscellaneous.kms import encrypt
+from aws_secrets.config.config_reader import ConfigReader
+from aws_secrets.helpers.catch_exceptions import catch_exceptions
 from aws_secrets.miscellaneous import session
+
+logger = logging.getLogger(__name__)
 
 
 @click.command(name='set-secret')
@@ -11,34 +15,25 @@ from aws_secrets.miscellaneous import session
 @click.option('-k', '--kms')
 @click.option('--profile')
 @click.option('--region')
+@catch_exceptions
 def set_secret(env_file, name, description, kms, profile, region):
     session.aws_profile = profile
     session.aws_region = region
 
-    with open(env_file, 'r') as env:
-        yaml_data = yaml.safe_load(env.read())
+    config = ConfigReader(env_file)
+    provider = config.get_provider('secrets')
 
-    if 'secrets' not in yaml_data:
-        yaml_data['secrets'] = []
-
-    secret = next(
-        (secret for secret in yaml_data['secrets'] if secret['name'] == name), None)
-
-    if secret is None:
-        secret = {
-            'name': name
-        }
-        yaml_data['secrets'].append(secret)
+    context_data = {
+        'name': name
+    }
 
     if description:
-        secret['description'] = description
+        context_data['description'] = description
 
     if kms:
-        secret['kms'] = kms
+        context_data['kms'] = kms
 
-    kms_arn = str(yaml_data['kms']['arn'])
-
-    print("Enter/Paste your secret. Ctrl-D or Ctrl-Z ( windows ) to save it.")
+    click.echo("Enter/Paste your secret. Ctrl-D or Ctrl-Z ( windows ) to save it.")
     contents = []
     while True:
         try:
@@ -47,10 +42,13 @@ def set_secret(env_file, name, description, kms, profile, region):
             break
         contents.append(line)
 
-    value = '\n'.join(contents)
+    context_data['value'] = '\n'.join(contents)
 
-    encrypted_value = encrypt(session.session(), value, kms_arn)
-    secret['value'] = encrypted_value.decode('utf-8')
+    secret = provider.find(name)
+    if secret is None:
+        secret = provider.add(context_data)
+    else:
+        provider.update(context_data)
 
-    with open(env_file, 'w') as outfile:
-        yaml.safe_dump(yaml_data, outfile)
+    config.encrypt()
+    config.save()

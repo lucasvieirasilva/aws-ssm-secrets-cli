@@ -1,6 +1,6 @@
 import click
-import yaml
-from aws_secrets.miscellaneous import kms
+from aws_secrets.config.config_reader import ConfigReader
+from aws_secrets.helpers.catch_exceptions import CLIError, catch_exceptions
 from aws_secrets.miscellaneous import session
 
 
@@ -10,26 +10,16 @@ from aws_secrets.miscellaneous import session
 @click.option('--non-decrypt', is_flag=True)
 @click.option('--profile')
 @click.option('--region')
+@catch_exceptions
 def view_parameter(env_file, name, non_decrypt, profile, region):
     session.aws_profile = profile
     session.aws_region = region
 
-    with open(env_file, 'r') as env:
-        yaml_data = yaml.safe_load(env.read())
-
-    parameter = next(
-        (param for param in yaml_data['parameters'] if param['name'] == name), None)
+    config = ConfigReader(env_file)
+    provider = config.get_provider('parameters')
+    parameter = provider.find(name)
 
     if parameter is None:
-        raise Exception(f'parameter {name} not found')
+        raise CLIError(f'parameter {name} not found')
 
-    if parameter['type'] == 'SecureString' and not non_decrypt:
-        kms_arn = str(yaml_data['kms']['arn'])
-
-        param_value = kms.decrypt(
-            session.session(), str(parameter['value']), kms_arn).decode('utf-8')
-
-    else:
-        param_value = str(parameter['value'])
-
-    print(param_value)
+    click.echo(parameter.decrypt())

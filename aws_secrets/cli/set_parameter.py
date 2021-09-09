@@ -1,6 +1,6 @@
 import click
-import yaml
-from aws_secrets.miscellaneous.kms import encrypt
+from aws_secrets.config.config_reader import ConfigReader
+from aws_secrets.helpers.catch_exceptions import catch_exceptions
 from aws_secrets.miscellaneous import session
 
 
@@ -14,32 +14,25 @@ from aws_secrets.miscellaneous import session
 @click.option('-k', '--kms')
 @click.option('--profile')
 @click.option('--region')
+@catch_exceptions
 def set_parameter(env_file, name, description, type, kms, profile, region):
     session.aws_profile = profile
     session.aws_region = region
-    with open(env_file, 'r') as env:
-        yaml_data = yaml.safe_load(env.read())
+    config = ConfigReader(env_file)
+    provider = config.get_provider('parameters')
 
-    if 'parameters' not in yaml_data:
-        yaml_data['parameters'] = []
-
-    parameter = next(
-        (param for param in yaml_data['parameters'] if param['name'] == name), None)
-
-    if parameter is None:
-        parameter = {
-            'name': name,
-            'type': type,
-        }
-        yaml_data['parameters'].append(parameter)
+    context_data = {
+        'name': name,
+        'type': type,
+    }
 
     if description:
-        parameter['description'] = description
+        context_data['description'] = description
 
     if kms:
-        parameter['kms'] = kms
+        context_data['kms'] = kms
 
-    print("Enter/Paste your secret. Ctrl-D or Ctrl-Z ( windows ) to save it.")
+    click.echo("Enter/Paste your secret. Ctrl-D or Ctrl-Z ( windows ) to save it.")
     contents = []
     while True:
         try:
@@ -48,16 +41,13 @@ def set_parameter(env_file, name, description, type, kms, profile, region):
             break
         contents.append(line)
 
-    value = '\n'.join(contents)
+    context_data['value'] = '\n'.join(contents)
 
-    if parameter['type'] == 'SecureString':
-        kms_arn = str(yaml_data['kms']['arn'])
-        print('Encrypting the value')
-        encrypted_value = encrypt(session.session(), value, kms_arn)
-        parameter['value'] = encrypted_value.decode('utf-8')
+    parameter = provider.find(name)
+    if parameter is None:
+        parameter = provider.add(context_data)
     else:
-        print('Put new value to the parameter')
-        parameter['value'] = value
+        provider.update(context_data)
 
-    with open(env_file, 'w') as outfile:
-        yaml.safe_dump(yaml_data, outfile)
+    config.encrypt()
+    config.save()
