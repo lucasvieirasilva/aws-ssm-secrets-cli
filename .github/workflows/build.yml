@@ -36,4 +36,3 @@ jobs:
         path: coverage/coverage.xml
         repo_token: ${{ secrets.GITHUB_TOKEN }}
         minimum_coverage: 100
-        only_changed_files: true
