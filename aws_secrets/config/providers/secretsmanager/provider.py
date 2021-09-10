@@ -1,4 +1,6 @@
 import json
+from typing import Any, Dict, List, Optional
+
 import click
 from aws_secrets.config.providers import BaseProvider
 from aws_secrets.config.providers.secretsmanager.entry import \
@@ -6,10 +8,38 @@ from aws_secrets.config.providers.secretsmanager.entry import \
 
 
 class SecretsManagerProvider(BaseProvider):
+    """
+        AWS Secrets Manager Provider
+
+        This class handles the AWS Secrets Manager features:
+        - deploy the changes
+        - add new secrets
+        - update existing secrets
+        - decrypt/encrypt secrets
+
+        Args:
+            config (`ConfigReader`): configuration file reader handler
+
+        Attributes:
+            logger (`Logger`): logger instance
+            global_tags (`Dict[str, str]`): map of global tags of the config file
+            session (`Session`): boto3 session object
+            kms_arn (`str`): Main Kms ARN
+            config_data (`Dict[str, Any]`): configuration parsed YAML
+            secrets_data (`Dict[str, Any]`): secrets parsed YAML
+            entries (`List[SecretManagerEntry]`): entries list
+    """
     def __init__(self, config) -> None:
         super(SecretsManagerProvider, self).__init__(config)
 
-    def load_entries(self):
+    def load_entries(self) -> List[SecretManagerEntry]:
+        """
+            the secrets entries
+            location: config YAML file `secrets` list property
+
+            Returns:
+                `List[SecretManagerEntry]`: list of entries
+        """
         result = []
         self.logger.debug('Loading Secrets Manager entries')
         for param in self._get_data_entries():
@@ -26,7 +56,10 @@ class SecretsManagerProvider(BaseProvider):
 
         return result
 
-    def decrypt(self):
+    def decrypt(self) -> None:
+        """
+            Decrypt all the secrets in the config file
+        """
         self.logger.debug('Decrypting Secrets Manager entries')
         for item in self._get_data_entries():
             item_obj = next((p for p in self.entries if p.name == item['name']))
@@ -39,11 +72,29 @@ class SecretsManagerProvider(BaseProvider):
 
             item['value'] = decrypted_value
 
-    def find(self, name):
+    def find(self, name: str) -> Optional[SecretManagerEntry]:
+        """
+            Find an AWS Secret Manager secret by name
+
+            Args:
+                name (`str`): entry name
+
+            Returns:
+                `SecretManagerEntry`, optional: secret object or None
+        """
         self.logger.debug(f'Finding Secrets Manager entries by name "{name}"')
         return next((e for e in self.entries if e.name == name), None)
 
-    def add(self, data):
+    def add(self, data: Dict[str, Any]) -> SecretManagerEntry:
+        """
+            Add new AWS Secret Manager secret
+
+            Args:
+                data (`Dict[str, Any]`): new secret data
+
+            Returns:
+                `SecretManagerEntry`: secret object
+        """
         self.logger.debug(f'Add "{data["name"]}" Secrets Manager entry')
         entry = SecretManagerEntry(
             session=self.session,
@@ -55,7 +106,13 @@ class SecretsManagerProvider(BaseProvider):
 
         return entry
 
-    def update(self, data):
+    def update(self, data: Dict[str, Any]) -> None:
+        """
+            Update an existing secret
+
+            Args:
+                data (`Dict[str, Any]`): updated secret data
+        """
         self.logger.debug(f'Updating "{data["name"]}" Secrets Manager entry')
 
         for idx, entry in enumerate(self.entries):
@@ -73,7 +130,20 @@ class SecretsManagerProvider(BaseProvider):
                 self.logger.debug('Updating entry data in the data entries list')
                 data_entries[idx] = data
 
-    def deploy(self, filter_pattern, dry_run, confirm):
+    def deploy(
+        self,
+        filter_pattern: Optional[str],
+        dry_run: bool,
+        confirm: bool
+    ) -> None:
+        """
+            Deploy all AWS Secrets Manager secrets changes
+
+            Args:
+                filter_pattern (`Optional[str]`): resource filter pattern
+                dry_run: (`bool`): dry run flag, just calculate the changes, but not apply them.
+                confirm: (`bool`): CLI confirmation prompt for the changes.
+        """
         click.echo("Loading AWS Secrets Manager changes...")
         any_changes = False
         for secret in self.filter(filter_pattern):
@@ -86,9 +156,20 @@ class SecretsManagerProvider(BaseProvider):
     def _deploy_secret(
         self,
         secret: SecretManagerEntry,
-        dry_run,
-        confirm
-    ):
+        dry_run: bool,
+        confirm: bool
+    ) -> bool:
+        """
+            Deploy a secret changes
+
+            Args:
+                secret (`SecretManagerEntry`): Secret entry object
+                dry_run: (`bool`): dry run flag, just calculate the changes, but not apply them.
+                confirm: (`bool`): CLI confirmation prompt for the changes.
+
+            Returns:
+                `bool`: if changes are found.
+        """
         self.merge_tags(secret)
         changes = secret.changes()
 
@@ -109,10 +190,21 @@ class SecretsManagerProvider(BaseProvider):
     def _apply_secret_changes(
         self,
         secret: SecretManagerEntry,
-        changes,
-        dry_run,
-        confirm
-    ):
+        changes: Dict[str, Any],
+        dry_run: bool,
+        confirm: bool
+    ) -> None:
+        """
+            Update an existing secret on the AWS environment
+
+            If the non replaceable attributes are found, recreate the resource instead of update
+
+            Args:
+                secret (`SecretManagerEntry`): Secret entry object
+                changes (`Dict[str, Any]`): map of changes
+                dry_run: (`bool`): dry run flag, just calculate the changes, but not apply them.
+                confirm: (`bool`): CLI confirmation prompt for the changes.
+        """
         self.print_resource_name('Secret', secret.name)
         self.print_changes(changes)
 
@@ -132,11 +224,29 @@ class SecretsManagerProvider(BaseProvider):
                     or (has_non_replaceable_changes is False and confirm is False):
                 secret.update(changes)
 
-    def get_sensible_entries(self):
+    def get_sensible_entries(self) -> List[Dict[str, Any]]:
+        """
+            Get sensible entries, in the AWS Secrets Manager case all the entries
+
+            Returns:
+                `List[Dict[str, Any]]`: list of sensible entries data
+        """
         return self._get_data_entries()
 
-    def _get_secrets_entries(self):
+    def _get_secrets_entries(self) -> List[Dict[str, Any]]:
+        """
+            Get secrets config file entries
+
+            Returns:
+                `List[Dict[str, Any]]`: list of secrets
+        """
         return self.secrets_data.get('secrets', [])
 
-    def _get_data_entries(self):
+    def _get_data_entries(self) -> List[Dict[str, Any]]:
+        """
+            Get the parsed config YAML secrets
+
+            Returns:
+                `List[Dict[str, Any]]`: list of secrets
+        """
         return self.config_data.get('secrets', [])

@@ -2,14 +2,16 @@ import logging
 import warnings
 
 
-def _get_formatter(custom_format=None):
+def _get_formatter(custom_format: str = None):
     """
         Get Logger Formatter
-        [%(asctime)s] - %(message)s
+
+        Default: [%(asctime)s] - %(message)s
+
         Args:
-            custom_format: custom format `string`
+            custom_format (`str`): custom format
         Returns:
-            logger formatter `logging.Formatter`
+            `Formatter`: logger formatter
     """
 
     fmt = "[%(asctime)s] - %(message)s"
@@ -26,7 +28,7 @@ with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-def setup_logging(module, loglevel):
+def setup_logging(module: str, loglevel: str) -> logging.Logger:
     """
     Sets up logging.
     By default, the python logging module is configured to push logs to stdout
@@ -38,10 +40,10 @@ def setup_logging(module, loglevel):
         import logging
         logging.getLogger(__name__).info("my log message")
     Args:
-        module: python module name `string`
-        loglevel: log level `string`
+        module (`str`): python module name
+        loglevel (`str`): log level
     Returns:
-        A logger.
+        `Logger`: logger instance
     """
 
     if loglevel == 'DEBUG':

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Store the Ciphertext in a separate file. [issue-25](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/25)
+- Add Global Catch Exception Handler to the CLI to avoid StackTrace messages. [issue-30](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/30)
+
 ## [1.2.0] - 2021-08-20
 
 ### Added

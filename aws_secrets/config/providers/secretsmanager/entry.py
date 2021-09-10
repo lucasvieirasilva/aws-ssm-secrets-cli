@@ -1,18 +1,26 @@
 import json
+from typing import Any, Dict, Optional
 
 from botocore.exceptions import ClientError
+from botocore.session import Session
 
 from aws_secrets.config.providers import BaseEntry
 from aws_secrets.miscellaneous import kms
 
 
 class SecretManagerEntry(BaseEntry):
-    def __init__(self, session, kms_arn, data, cipher_text=None) -> None:
+    def __init__(
+        self,
+        session: Session,
+        kms_arn: str,
+        data: Dict[str, Any],
+        cipher_text: str = None
+    ) -> None:
         super(SecretManagerEntry, self).__init__(session, kms_arn, data, cipher_text)
 
         self.client = self.session.client('secretsmanager')
 
-    def encrypt(self):
+    def encrypt(self) -> Optional[str]:
         if isinstance(self.raw_value, str) or isinstance(self.raw_value, dict):
             if type(self.raw_value) is dict:
                 self.raw_value = json.dumps(self.raw_value)
@@ -25,7 +33,7 @@ class SecretManagerEntry(BaseEntry):
         self.logger.debug(f'Secret - {self.name} - Entry already encrypted')
         return self.cipher_text
 
-    def decrypt(self):
+    def decrypt(self) -> str:
         def _do_decrypt(value):
             self.logger.debug(f'Secret - {self.name} - Decrypting entry')
             decrypted_value = kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
@@ -38,7 +46,7 @@ class SecretManagerEntry(BaseEntry):
 
         return self.plain_text
 
-    def create(self):
+    def create(self) -> None:
         args = {
             'Name': self.name,
             'Description': self.description,
@@ -53,7 +61,7 @@ class SecretManagerEntry(BaseEntry):
         self.client.create_secret(**args)
         self.logger.debug(f'Secret - {self.name} - AWS Resource Created')
 
-    def update(self, changes):
+    def update(self, changes: Dict[str, Any]) -> None:
         args = {
             'SecretId': self.name,
             'Description': self.description,
@@ -76,7 +84,7 @@ class SecretManagerEntry(BaseEntry):
         if len(tags) > 0:
             self.apply_tags()
 
-    def apply_tags(self):
+    def apply_tags(self) -> None:
         tags = self.parse_tags()
         self.logger.debug(f'Secret - {self.name} - Applying tags "{tags}" to the AWS resource')
         self.client.tag_resource(
@@ -85,7 +93,7 @@ class SecretManagerEntry(BaseEntry):
         )
         self.logger.debug(f'Secret - {self.name} - tags "{tags}" applied')
 
-    def remove_tags(self, tags):
+    def remove_tags(self, tags: Dict[str, str]) -> None:
         tags_key = list(map(lambda tag: tag['Key'], tags))
         self.logger.debug(f'Secret - {self.name} - Removing tags "{tags}" from the AWS Resource')
         self.client.untag_resource(
@@ -94,7 +102,7 @@ class SecretManagerEntry(BaseEntry):
         )
         self.logger.debug(f'Secret - {self.name} - tags "{tags}" removed')
 
-    def delete(self):
+    def delete(self) -> None:
         self.logger.debug(f'Secret - {self.name} - Deleting Secret from AWS account')
         self.client.delete_secret(
             SecretId=self.name,
@@ -102,7 +110,7 @@ class SecretManagerEntry(BaseEntry):
         )
         self.logger.debug(f'Secret - {self.name} - AWS Resource Deleted')
 
-    def changes(self):
+    def changes(self) -> Dict[str, Any]:
         changes = {
             'Exists': False,
             'ChangesList': []
@@ -181,7 +189,7 @@ class SecretManagerEntry(BaseEntry):
 
         return changes
 
-    def _get_secret_value(self):
+    def _get_secret_value(self) -> str:
         client = self.session.client('secretsmanager')
         value = ''
         try:

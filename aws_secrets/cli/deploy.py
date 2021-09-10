@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import click
 from aws_secrets.config.config_reader import ConfigReader
@@ -8,7 +9,7 @@ from aws_secrets.miscellaneous import session
 logger = logging.getLogger(__name__)
 
 
-@click.command(name='deploy')
+@click.command(name='deploy', help='Deploy resource changes')
 @click.option('-e', '--env-file', help="Environment YAML file", type=click.Path(), required=True)
 @click.option('--filter-pattern', help="Filter Pattern", type=str)
 @click.option('--dry-run', help="Execution without apply the changes on the environment", is_flag=True)
@@ -18,7 +19,29 @@ logger = logging.getLogger(__name__)
 @click.option('--profile', help="AWS Profile")
 @click.option('--region', help="AWS Region")
 @catch_exceptions
-def deploy(env_file, filter_pattern, dry_run, confirm, only_secrets, only_parameters, profile, region):
+def deploy(
+    env_file: str,
+    filter_pattern: Optional[str],
+    dry_run: bool,
+    confirm: bool,
+    only_secrets: bool,
+    only_parameters: bool,
+    profile: Optional[str],
+    region: Optional[str]
+):
+    """
+        Deploy CLI Commmand `aws-secrets deploy --help`
+
+        Args:
+            env_file (`str`): configuration YAML file
+            filter_pattern (`str`, optional): resource filter pattern
+            dry_run (`bool`): Dry run flag
+            confirm (`bool`): Flag to confirm the changes before apply
+            only_secrets (`bool`): Only deploy secrets
+            only_parameters (`bool`): Only deploy parameters
+            profile (`str`, optional): AWS Profile
+            region (`str`, optional): AWS Region
+    """
     session.aws_profile = profile
     session.aws_region = region
 

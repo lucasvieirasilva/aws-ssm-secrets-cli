@@ -1,10 +1,11 @@
+from typing import Optional
 import click
 from aws_secrets.config.config_reader import ConfigReader
 from aws_secrets.helpers.catch_exceptions import catch_exceptions
 from aws_secrets.miscellaneous import session
 
 
-@click.command(name='set-parameter')
+@click.command(name='set-parameter', help='Add/Update SSM Parameters')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('-n', '--name', prompt=True, required=True)
 @click.option('-d', '--description', help='SSM Parameter Description', required=False)
@@ -15,7 +16,27 @@ from aws_secrets.miscellaneous import session
 @click.option('--profile')
 @click.option('--region')
 @catch_exceptions
-def set_parameter(env_file, name, description, type, kms, profile, region):
+def set_parameter(
+    env_file: str,
+    name: str,
+    description: Optional[str],
+    type: str,
+    kms: Optional[str],
+    profile: Optional[str],
+    region: Optional[str]
+):
+    """
+        Add/Update SSM Parameters CLI Commmand `aws-secrets set-parameter --help`
+
+        Args:
+            env_file (`str`): configuration YAML file
+            name (`str`): SSM parameter name
+            description (`str`, optional): SSM parameter description
+            type (`str`): SSM parameter type
+            kms (`str`, optional): SSM parameter KMS Arn or Id
+            profile (`str`, optional): AWS Profile
+            region (`str`, optional): AWS Region
+    """
     session.aws_profile = profile
     session.aws_region = region
     config = ConfigReader(env_file)

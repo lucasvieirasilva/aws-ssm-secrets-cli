@@ -12,7 +12,8 @@ from aws_secrets.cli.view_secret import view_secret
 from aws_secrets.helpers.catch_exceptions import catch_exceptions
 from aws_secrets.helpers.logging import setup_logging
 from aws_secrets.representers.literal import Literal, literal_presenter
-from aws_secrets.tags import CmdTag, OutputStackTag
+from aws_secrets.tags.cmd import CmdTag
+from aws_secrets.tags.output_stack import OutputStackTag
 
 yaml.SafeLoader.add_constructor('!cf_output', OutputStackTag.from_yaml)
 yaml.SafeDumper.add_multi_representer(
@@ -22,7 +23,7 @@ yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
 yaml.SafeDumper.add_representer(Literal, literal_presenter)
 
 
-@click.group()
+@click.group(help='AWS Secrets CLI')
 @click.option(
     '--loglevel',
     help='Log level.',
@@ -33,7 +34,14 @@ yaml.SafeDumper.add_representer(Literal, literal_presenter)
 )
 @click.pass_context
 @catch_exceptions
-def cli(ctx, loglevel):
+def cli(ctx, loglevel: str):
+    """
+        Root CLI Group `aws-secrets --help`
+
+        Args:
+            ctx (`click.Context`): click context object
+            loglevel (`str`): log level
+    """
 
     ctx.ensure_object(dict)
     ctx.obj['loglevel'] = loglevel

@@ -1,16 +1,24 @@
+from typing import Any, Dict, Optional
+from botocore.session import Session
 from aws_secrets.config.providers import BaseEntry
 from aws_secrets.miscellaneous import kms
 from botocore.exceptions import ClientError
 
 
 class SSMParameterEntry(BaseEntry):
-    def __init__(self, session, kms_arn, data, cipher_text=None) -> None:
+    def __init__(
+        self,
+        session: Session,
+        kms_arn: str,
+        data: Dict[str, Any],
+        cipher_text: str = None
+    ) -> None:
         super(SSMParameterEntry, self).__init__(session, kms_arn, data, cipher_text)
 
         self.type = data['type']
         self.client = self.session.client('ssm')
 
-    def encrypt(self):
+    def encrypt(self) -> Optional[str]:
         if self.type == 'SecureString' and self.raw_value and isinstance(self.raw_value, str):
             self.logger.warning(f'Parameter - {self.name} - Encrypting...')
             self.cipher_text = kms.encrypt(self.session, self.raw_value, self.kms_arn).decode('utf-8')
@@ -22,7 +30,7 @@ class SSMParameterEntry(BaseEntry):
 
         return None
 
-    def decrypt(self):
+    def decrypt(self) -> str:
         def _do_decrypt(value):
             self.logger.debug(f'Parameter - {self.name} - Decrypting entry')
             decrypted_value = kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
@@ -38,7 +46,7 @@ class SSMParameterEntry(BaseEntry):
 
         return self.plain_text
 
-    def create(self):
+    def create(self) -> None:
         args = {
             'Name': self.name,
             'Description': self.description,
@@ -54,7 +62,7 @@ class SSMParameterEntry(BaseEntry):
         self.client.put_parameter(**args)
         self.logger.debug(f'Parameter - {self.name} - AWS Resource Created')
 
-    def update(self, changes):
+    def update(self, changes: Dict[str, Any]) -> None:
         args = {
             'Name': self.name,
             'Description': self.description,
@@ -79,7 +87,7 @@ class SSMParameterEntry(BaseEntry):
         if len(tags) > 0:
             self.apply_tags()
 
-    def apply_tags(self):
+    def apply_tags(self) -> None:
         tags = self.parse_tags()
         self.logger.debug(f'Parameter - {self.name} - Applying tags "{tags}" to the AWS resource')
         self.client.add_tags_to_resource(
@@ -89,7 +97,7 @@ class SSMParameterEntry(BaseEntry):
         )
         self.logger.debug(f'Parameter - {self.name} - tags "{tags}" applied')
 
-    def remove_tags(self, tags):
+    def remove_tags(self, tags: Dict[str, str]) -> None:
         tags_key = list(map(lambda tag: tag['Key'], tags))
         self.logger.debug(f'Parameter - {self.name} - Removing tags "{tags}" from the AWS Resource')
         self.client.remove_tags_from_resource(
@@ -99,14 +107,14 @@ class SSMParameterEntry(BaseEntry):
         )
         self.logger.debug(f'Parameter - {self.name} - tags "{tags}" removed')
 
-    def delete(self):
+    def delete(self) -> None:
         self.logger.debug(f'Parameter - {self.name} - Deleting Parameter from AWS account')
         self.client.delete_parameter(
             Name=self.name
         )
         self.logger.debug(f'Parameter - {self.name} - AWS Resource Deleted')
 
-    def changes(self):
+    def changes(self) -> Dict[str, Any]:
         changes = {
             'Exists': False,
             'ChangesList': []
@@ -201,7 +209,7 @@ class SSMParameterEntry(BaseEntry):
 
         return changes
 
-    def _get_aws_value(self):
+    def _get_aws_value(self) -> str:
         param_value = ''
         try:
             param_response = self.client.get_parameter(

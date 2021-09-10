@@ -2,9 +2,11 @@
 Catch Exception decorator for CLI commands
 """
 
-import sys
 import logging
+import sys
 from functools import wraps
+from typing import Callable
+
 from boto3.exceptions import Boto3Error
 from botocore.exceptions import BotoCoreError, ClientError
 
@@ -12,13 +14,16 @@ logger = logging.getLogger(__name__)
 
 
 class CLIError(Exception):
-    pass
+    """
+        Managed CLI Runtime Exception
+    """
 
 
-def catch_exceptions(func):
+def catch_exceptions(func: Callable):
     """
     Catches and simplifies expected errors thrown by CLI.
     catch_exceptions should be used as a decorator.
+
     Args:
         func: The function which may throw exceptions which should be
         simplified.

@@ -1,4 +1,5 @@
 import logging
+from typing import Optional
 
 import click
 from aws_secrets.config.config_reader import ConfigReader
@@ -8,7 +9,7 @@ from aws_secrets.miscellaneous import session
 logger = logging.getLogger(__name__)
 
 
-@click.command(name='set-secret')
+@click.command(name='set-secret', help='Add/Update AWS Secrets Manager secrets')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('-n', '--name', required=True)
 @click.option('-d', '--description', help='Secret Description', required=False)
@@ -16,7 +17,25 @@ logger = logging.getLogger(__name__)
 @click.option('--profile')
 @click.option('--region')
 @catch_exceptions
-def set_secret(env_file, name, description, kms, profile, region):
+def set_secret(
+    env_file: str,
+    name: str,
+    description: Optional[str],
+    kms: Optional[str],
+    profile: Optional[str],
+    region: Optional[str]
+):
+    """
+        Add/Update AWS Secrets Manager secrets CLI Commmand `aws-secrets set-secret --help`
+
+        Args:
+            env_file (`str`): configuration YAML file
+            name (`str`): SSM parameter name
+            description (`str`, optional): SSM parameter description
+            kms (`str`, optional): SSM parameter KMS Arn or Id
+            profile (`str`, optional): AWS Profile
+            region (`str`, optional): AWS Region
+    """
     session.aws_profile = profile
     session.aws_region = region
 
