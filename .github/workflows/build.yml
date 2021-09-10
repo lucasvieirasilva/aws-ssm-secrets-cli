@@ -30,13 +30,10 @@ jobs:
     - name: Run unit tests
       run: |
         pytest tests/
-  coverage:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - uses: 5monkeys/cobertura-action@master
-        with:
-          path: coverage/coverage.xml
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          minimum_coverage: 100
-          only_changed_files: true
+    - name: Coverage Report
+      uses: 5monkeys/cobertura-action@master
+      with:
+        path: coverage/coverage.xml
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        minimum_coverage: 100
+        only_changed_files: true
