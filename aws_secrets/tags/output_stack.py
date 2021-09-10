@@ -2,7 +2,7 @@ import yaml
 from yaml.dumper import SafeDumper
 from yaml.nodes import ScalarNode
 from aws_secrets.helpers.catch_exceptions import CLIError
-from aws_secrets.miscellaneous.cloudformation import get_output_value
+from aws_secrets.miscellaneous import cloudformation
 from aws_secrets.miscellaneous.session import session
 
 
@@ -42,7 +42,7 @@ class OutputStackTag(yaml.YAMLObject):
         stack_name = stack_args[0]
         output_name = stack_args[1]
 
-        return get_output_value(session(), stack_name, output_name)
+        return cloudformation.get_output_value(session(), stack_name, output_name)
 
     @classmethod
     def from_yaml(cls, _, node):

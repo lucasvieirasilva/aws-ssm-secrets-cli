@@ -41,7 +41,7 @@ def test_logging_warning(capsys):
 
     logger.debug('DEBUG')
     logger.info('INFO')
-    logger.warn('WARN')
+    logger.warning('WARN')
 
     captured = capsys.readouterr()
 

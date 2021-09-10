@@ -1,9 +1,9 @@
+from aws_secrets.helpers.catch_exceptions import CLIError
 import subprocess
 
 import click
 import yaml
-from aws_secrets.miscellaneous import session
-from aws_secrets.miscellaneous.cloudformation import get_output_value
+from aws_secrets.miscellaneous import session, cloudformation
 from yaml.dumper import SafeDumper
 from yaml.nodes import ScalarNode
 
@@ -66,7 +66,7 @@ class CmdTag(yaml.YAMLObject):
         elif provider == 'aws':
             self.resolve_aws_provider(value, default_value)
         else:
-            raise RuntimeError(f'Provider {provider} is not supported')
+            raise CLIError(f'Provider {provider} is not supported')
 
         self.resolve_variables()
 
@@ -98,7 +98,7 @@ class CmdTag(yaml.YAMLObject):
                 output_value = f'{base_option} {session.aws_profile}'
             elif default_value != '':
                 output_value = f'{base_option} {default_value}'
-        elif value == 'region':
+        else:
             base_option = '--region'
             if session.aws_region:
                 output_value = f'{base_option} {session.aws_region}'
@@ -150,7 +150,7 @@ class CmdTag(yaml.YAMLObject):
         """
         stack_name = value.split(".")[0]
         output_name = value.split(".")[1]
-        output_value = get_output_value(session.session(), stack_name, output_name)
+        output_value = cloudformation.get_output_value(session.session(), stack_name, output_name)
 
         if not output_value:
             output_value = default_value
@@ -175,8 +175,8 @@ class CmdTag(yaml.YAMLObject):
         """
         allowed_values = ['profile', 'region']
         if value not in allowed_values:
-            raise RuntimeError(f'Property `{value}` is not supported, ' +
-                               f'provider `session` just supports {allowed_values} properties')
+            raise CLIError(f'Property `{value}` is not supported, ' +
+                           f'provider `session` just supports {allowed_values} properties')
 
     def __repr__(self) -> str:
         """
