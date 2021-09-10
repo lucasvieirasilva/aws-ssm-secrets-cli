@@ -2,28 +2,6 @@ import logging
 import warnings
 
 
-def _get_formatter(custom_format: str = None):
-    """
-        Get Logger Formatter
-
-        Default: [%(asctime)s] - %(message)s
-
-        Args:
-            custom_format (`str`): custom format
-        Returns:
-            `Formatter`: logger formatter
-    """
-
-    fmt = "[%(asctime)s] - %(message)s"
-    if custom_format:
-        fmt = custom_format
-
-    return logging.Formatter(
-        fmt=fmt,
-        datefmt="%Y-%m-%d %H:%M:%S"
-    )
-
-
 with warnings.catch_warnings():
     warnings.filterwarnings("ignore", category=DeprecationWarning)
 
@@ -55,7 +33,10 @@ def setup_logging(module: str, loglevel: str) -> logging.Logger:
         logging.getLogger("botocore").setLevel(logging.CRITICAL)
 
     log_handler = logging.StreamHandler()
-    log_handler.setFormatter(_get_formatter())
+    log_handler.setFormatter(logging.Formatter(
+        fmt="[%(asctime)s] - %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S"
+    ))
     logger = logging.getLogger(module)
     for handler in logger.handlers:
         logger.removeHandler(handler)
