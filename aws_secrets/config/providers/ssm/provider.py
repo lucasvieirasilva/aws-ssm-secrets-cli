@@ -65,7 +65,7 @@ class SSMProvider(BaseProvider):
             item_obj = self.find(item['name'])
 
             decrypted_value = item_obj.decrypt()
-            if '\n' in decrypted_value:
+            if isinstance(decrypted_value, str) and '\n' in decrypted_value:
                 item['value'] = Literal(decrypted_value)
             else:
                 item['value'] = decrypted_value
@@ -239,7 +239,10 @@ class SSMProvider(BaseProvider):
             Returns:
                 `List[Dict[str, Any]]`: list of parameters data
         """
-        return self.secrets_data.get('parameters', [])
+        if 'parameters' not in self.secrets_data:
+            self.secrets_data['parameters'] = []
+
+        return self.secrets_data['parameters']
 
     def _get_data_entries(self) -> List[Dict[str, Any]]:
         """

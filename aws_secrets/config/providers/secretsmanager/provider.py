@@ -68,7 +68,7 @@ class SecretsManagerProvider(BaseProvider):
 
             try:
                 decrypted_value = json.loads(decrypted_value)
-            except ValueError:
+            except Exception:
                 pass
 
             item['value'] = decrypted_value
@@ -104,6 +104,7 @@ class SecretsManagerProvider(BaseProvider):
         )
         self.entries.append(entry)
         self._get_data_entries().append(data)
+        self._get_secrets_entries()
 
         return entry
 
@@ -230,6 +231,9 @@ class SecretsManagerProvider(BaseProvider):
             Returns:
                 `List[Dict[str, Any]]`: list of secrets
         """
+        if 'secrets' not in self.secrets_data:
+            self.secrets_data['secrets'] = []
+
         return self.secrets_data.get('secrets', [])
 
     def _get_data_entries(self) -> List[Dict[str, Any]]:
@@ -239,4 +243,7 @@ class SecretsManagerProvider(BaseProvider):
             Returns:
                 `List[Dict[str, Any]]`: list of secrets
         """
+        if 'secrets' not in self.config_data:
+            self.config_data['secrets'] = []
+
         return self.config_data.get('secrets', [])

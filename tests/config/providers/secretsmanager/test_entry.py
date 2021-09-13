@@ -155,7 +155,7 @@ def test_decrypt_with_value_data_not_str(mock_popen):
         cipher_text=None
     )
 
-    assert entry.decrypt() == 'myvalue'
+    assert isinstance(entry.decrypt(), CmdTag)
 
 
 @patch('aws_secrets.miscellaneous.kms.decrypt')

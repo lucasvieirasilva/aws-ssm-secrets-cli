@@ -1,11 +1,9 @@
 import json
 from typing import Any, Dict, Optional
 
-from botocore.exceptions import ClientError
-from botocore.session import Session
-
 from aws_secrets.config.providers import BaseEntry
 from aws_secrets.miscellaneous import kms
+from botocore.session import Session
 
 
 class SecretManagerEntry(BaseEntry):
@@ -36,17 +34,14 @@ class SecretManagerEntry(BaseEntry):
     def decrypt(self) -> str:
         def _do_decrypt(value):
             self.logger.debug(f'Secret - {self.name} - Decrypting entry')
-            decrypted_value = kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
-            self.plain_text = decrypted_value
+            return kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
 
         if self.cipher_text:
-            _do_decrypt(self.cipher_text)
+            return _do_decrypt(self.cipher_text)
         elif self.cipher_text is None and self.raw_value is not None and isinstance(self.raw_value, str):
-            _do_decrypt(self.raw_value)
-        else:
-            self.plain_text = str(self.raw_value)
+            return _do_decrypt(self.raw_value)
 
-        return self.plain_text
+        return self.raw_value
 
     def create(self) -> None:
         args = {

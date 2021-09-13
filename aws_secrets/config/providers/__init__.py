@@ -31,7 +31,6 @@ class BaseEntry:
         tags (`dict[str, str]`): resource tags
         raw_value (`Any`, `optional`): resource value, could be YAML tag Class, string value, or dict
         cipher_text (`str`, `optional`): resource encrypted value
-        plain_text (`str`, `optional`): resource decrypted value
     """
 
     __metaclass__ = abc.ABCMeta
@@ -65,7 +64,6 @@ class BaseEntry:
 
         self.raw_value = data.get('value', None)
         self.cipher_text = cipher_text
-        self.plain_text = None
 
     @abc.abstractmethod
     def decrypt(self) -> str:

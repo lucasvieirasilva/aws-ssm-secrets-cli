@@ -1,4 +1,5 @@
 from typing import Optional
+
 import click
 from aws_secrets.config.config_reader import ConfigReader
 from aws_secrets.helpers.catch_exceptions import catch_exceptions

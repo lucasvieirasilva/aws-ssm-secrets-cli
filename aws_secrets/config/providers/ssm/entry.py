@@ -33,18 +33,15 @@ class SSMParameterEntry(BaseEntry):
     def decrypt(self) -> str:
         def _do_decrypt(value):
             self.logger.debug(f'Parameter - {self.name} - Decrypting entry')
-            decrypted_value = kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
-            self.plain_text = decrypted_value
+            return kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
 
         if self.type == 'SecureString' and self.cipher_text:
-            _do_decrypt(self.cipher_text)
+            return _do_decrypt(self.cipher_text)
         elif self.type == 'SecureString' and self.cipher_text is None \
                 and self.raw_value is not None and isinstance(self.raw_value, str):
-            _do_decrypt(self.raw_value)
-        else:
-            self.plain_text = str(self.raw_value)
+            return _do_decrypt(self.raw_value)
 
-        return self.plain_text
+        return self.raw_value
 
     def create(self) -> None:
         args = {

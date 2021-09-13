@@ -20,7 +20,6 @@ def setup_aws_credentials_env_vars():
 def boto_fs(fs):
     for module in [boto3, botocore]:
         module_dir = pathlib.Path(module.__file__).parent
-        print(module.__file__)
-        fs.add_real_directory(module_dir, lazy_read=False)
+        fs.add_real_directory(module_dir, lazy_read=True)
 
     yield fs
