@@ -16,7 +16,7 @@ def test_encrypt_secure_string(mock_encrypt):
 
     mock_encrypt.return_value = b'SecretData'
 
-    session = boto3.Session()
+    session = boto3.Session(region_name='us-east-1')
 
     entry = SSMParameterEntry(
         session=session,
@@ -39,7 +39,7 @@ def test_encrypt_secure_string_already_encrypted(mock_encrypt):
         Should not encrypt the raw value when the value is already encrypted
     """
 
-    session = boto3.Session()
+    session = boto3.Session(region_name='us-east-1')
 
     entry = SSMParameterEntry(
         session=session,
@@ -61,7 +61,7 @@ def test_encrypt_invalid_type(mock_encrypt):
         Should not encrypt when the type is invalid
     """
 
-    session = boto3.Session()
+    session = boto3.Session(region_name='us-east-1')
 
     entry = SSMParameterEntry(
         session=session,
@@ -85,7 +85,7 @@ def test_decrypt_secure_string(mock_decrypt):
 
     mock_decrypt.return_value = b'PlainTextData'
 
-    session = boto3.Session()
+    session = boto3.Session(region_name='us-east-1')
 
     entry = SSMParameterEntry(
         session=session,
@@ -109,7 +109,7 @@ def test_decrypt_secure_string_with_value_data(mock_decrypt):
 
     mock_decrypt.return_value = b'PlainTextData'
 
-    session = boto3.Session()
+    session = boto3.Session(region_name='us-east-1')
 
     entry = SSMParameterEntry(
         session=session,
@@ -134,7 +134,7 @@ def test_decrypt_string_type(mock_decrypt):
 
     mock_decrypt.return_value = b'PlainTextData'
 
-    session = boto3.Session()
+    session = boto3.Session(region_name='us-east-1')
 
     entry = SSMParameterEntry(
         session=session,
@@ -174,7 +174,7 @@ def test_create_default_kms(mock_decrypt):
                 'Tags': []
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
 
             entry = SSMParameterEntry(
                 session=session,
@@ -216,7 +216,7 @@ def test_create_custom_kms(mock_decrypt):
                 'Tags': []
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
 
             entry = SSMParameterEntry(
                 session=session,
@@ -263,7 +263,7 @@ def test_update_default_kms_without_tag_changes(mock_decrypt):
                 'TagKeys': []
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
 
             entry = SSMParameterEntry(
                 session=session,
@@ -312,7 +312,7 @@ def test_update_custom_kms_without_tag_changes(mock_decrypt):
                 'TagKeys': []
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
 
             entry = SSMParameterEntry(
                 session=session,
@@ -369,7 +369,7 @@ def test_update_default_kms_with_tag_changes(mock_decrypt):
                 }]
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
 
             entry = SSMParameterEntry(
                 session=session,
@@ -415,7 +415,7 @@ def test_delete():
                 'Name': name
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
 
             entry = SSMParameterEntry(
                 session=session,
@@ -460,7 +460,7 @@ def test_calculate_changes_with_parameter_not_exists():
                 ]
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
             entry = SSMParameterEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -535,7 +535,7 @@ def test_calculate_changes_with_changes(mock_decrypt):
                 'ResourceId': name
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
             entry = SSMParameterEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -644,7 +644,7 @@ def test_calculate_changes_without_changes(mock_decrypt):
                 'ResourceId': name
             })
 
-            session = boto3.Session()
+            session = boto3.Session(region_name='us-east-1')
             entry = SSMParameterEntry(
                 session=session,
                 cipher_text='SecretData',
