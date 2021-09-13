@@ -1,4 +1,3 @@
-import traceback
 from typing import Optional
 
 import click
@@ -11,8 +10,8 @@ from aws_secrets.miscellaneous import session
 @click.command(name='decrypt', help='Decrypt a configuration file')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('--output', type=click.Path())
-@click.option('--profile')
-@click.option('--region')
+@click.option('--profile', envvar='AWS_PROFILE')
+@click.option('--region', envvar='AWS_REGION')
 @catch_exceptions
 def decrypt(
     env_file: str,

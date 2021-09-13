@@ -28,8 +28,6 @@ jobs:
         pip install -r requirements/prod.txt
         pip install -r requirements/dev.txt
     - name: Run unit tests
-      env:
-        AWS_DEFAULT_REGION: 'us-east-1'
       run: |
         pytest tests/
     - name: Coverage Report
