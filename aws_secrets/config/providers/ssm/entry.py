@@ -1,8 +1,8 @@
-from typing import Any, Dict, Optional
-from botocore.session import Session
+from typing import Any, Dict, List, Optional
+
 from aws_secrets.config.providers import BaseEntry
 from aws_secrets.miscellaneous import kms
-from botocore.exceptions import ClientError
+from botocore.session import Session
 
 
 class SSMParameterEntry(BaseEntry):
@@ -67,12 +67,12 @@ class SSMParameterEntry(BaseEntry):
             'Name': self.name,
             'Description': self.description,
             'Type': self.type,
-            'Value': self.plain_text,
+            'Value': self.decrypt(),
             'Overwrite': True
         }
 
         if self.kms:
-            args['KmsKeyId'] = self.kms
+            args['KeyId'] = self.kms
 
         self.logger.debug(f'Parameter - {self.name} - Updating Parameter in the AWS account')
         self.client.put_parameter(**args)
@@ -97,7 +97,7 @@ class SSMParameterEntry(BaseEntry):
         )
         self.logger.debug(f'Parameter - {self.name} - tags "{tags}" applied')
 
-    def remove_tags(self, tags: Dict[str, str]) -> None:
+    def remove_tags(self, tags: List[Dict[str, str]]) -> None:
         tags_key = list(map(lambda tag: tag['Key'], tags))
         self.logger.debug(f'Parameter - {self.name} - Removing tags "{tags}" from the AWS Resource')
         self.client.remove_tags_from_resource(
@@ -135,7 +135,7 @@ class SSMParameterEntry(BaseEntry):
             changes['Exists'] = True
             aws_param = aws_parameters[0]
 
-            aws_param_value = self._get_aws_value()
+            aws_param_value = self._get_aws_value(aws_param['Type'])
             yaml_param_value = self.decrypt()
 
             if aws_param_value != yaml_param_value:
@@ -166,7 +166,7 @@ class SSMParameterEntry(BaseEntry):
             if self.kms is not None and self.kms != aws_param['KeyId']:
                 changes['ChangesList'].append(
                     {
-                        'Key': 'KmsKeyId',
+                        'Key': 'KeyId',
                         'HasChanges': True,
                         'Replaceable': True,
                         'Value': self.kms,
@@ -209,17 +209,10 @@ class SSMParameterEntry(BaseEntry):
 
         return changes
 
-    def _get_aws_value(self) -> str:
-        param_value = ''
-        try:
-            param_response = self.client.get_parameter(
-                Name=self.name,
-                WithDecryption=True if self.type == 'SecureString' else False
-            )
+    def _get_aws_value(self, type: str) -> str:
+        param_response = self.client.get_parameter(
+            Name=self.name,
+            WithDecryption=True if type == 'SecureString' else False
+        )
 
-            param_value = param_response['Parameter']['Value']
-        except ClientError as e:
-            if e.response['Error']['Code'] != 'ParameterNotFound':
-                raise e
-
-        return param_value
+        return param_response['Parameter']['Value']

@@ -1,6 +1,8 @@
 import os
+import pathlib
 
 import boto3
+import botocore
 import pytest
 
 
@@ -12,3 +14,13 @@ def setup_aws_credentials_env_vars():
     os.environ['AWS_SESSION_TOKEN'] = 'testing'
 
     boto3.setup_default_session(region_name=os.getenv('AWS_REGION', 'us-east-1'))
+
+
+@pytest.fixture
+def boto_fs(fs):
+    for module in [boto3, botocore]:
+        module_dir = pathlib.Path(module.__file__).parent
+        print(module.__file__)
+        fs.add_real_directory(module_dir, lazy_read=False)
+
+    yield fs

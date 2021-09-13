@@ -62,14 +62,13 @@ class SSMProvider(BaseProvider):
         """
         self.logger.debug('Decrypting SSM Parameter entries')
         for item in self._get_data_entries():
-            item_obj = next((p for p in self.entries if p.name == item['name']))
+            item_obj = self.find(item['name'])
 
             decrypted_value = item_obj.decrypt()
-            if decrypted_value:
-                if '\n' in decrypted_value:
-                    item['value'] = Literal(decrypted_value)
-                else:
-                    item['value'] = decrypted_value
+            if '\n' in decrypted_value:
+                item['value'] = Literal(decrypted_value)
+            else:
+                item['value'] = decrypted_value
 
     def find(self, name: str) -> Optional[SSMParameterEntry]:
         """
@@ -211,15 +210,17 @@ class SSMProvider(BaseProvider):
         if not dry_run:
             confirm_msg = "   --> Would you like to update this SSM parameter?"
 
-            def non_replaceable_action(param):
-                parameter.delete()
+            def non_replaceable_action(param: SSMParameterEntry) -> None:
+                param.delete()
+                param.create()
 
             has_non_replaceable_changes = self.apply_non_replaceable_attrs(parameter, changes, non_replaceable_action)
 
             if has_non_replaceable_changes is None:
                 return
 
-            if (has_non_replaceable_changes is False and confirm and click.confirm(confirm_msg)) or confirm is False:
+            if (has_non_replaceable_changes is False and confirm and click.confirm(confirm_msg)) or \
+                    (has_non_replaceable_changes is False and confirm is False):
                 parameter.update(changes)
 
     def get_sensible_entries(self) -> List[Dict[str, Any]]:
