@@ -29,6 +29,7 @@ class SecretsManagerProvider(BaseProvider):
             secrets_data (`Dict[str, Any]`): secrets parsed YAML
             entries (`List[SecretManagerEntry]`): entries list
     """
+
     def __init__(self, config) -> None:
         super(SecretsManagerProvider, self).__init__(config)
 
@@ -62,7 +63,7 @@ class SecretsManagerProvider(BaseProvider):
         """
         self.logger.debug('Decrypting Secrets Manager entries')
         for item in self._get_data_entries():
-            item_obj = next((p for p in self.entries if p.name == item['name']))
+            item_obj = self.find(item['name'])
             decrypted_value = item_obj.decrypt()
 
             try:
@@ -177,7 +178,9 @@ class SecretsManagerProvider(BaseProvider):
             self.print_resource_name('Secret', secret.name)
             click.echo("--> New Secret")
 
-            if not dry_run or (confirm and click.confirm("--> Would you to create this secret?")):
+            if (not dry_run and confirm and
+                    click.confirm("--> Would you to create this secret?")) or \
+                    (not dry_run and confirm is False):
                 secret.create()
                 return True
         else:
@@ -197,8 +200,6 @@ class SecretsManagerProvider(BaseProvider):
         """
             Update an existing secret on the AWS environment
 
-            If the non replaceable attributes are found, recreate the resource instead of update
-
             Args:
                 secret (`SecretManagerEntry`): Secret entry object
                 changes (`Dict[str, Any]`): map of changes
@@ -210,18 +211,7 @@ class SecretsManagerProvider(BaseProvider):
 
         if not dry_run:
             confirm_msg = "   --> Would you like to update this secret?"
-
-            def non_replaceable_action(resource):
-                secret.delete()
-                secret.create()
-
-            has_non_replaceable_changes = self.apply_non_replaceable_attrs(secret, changes, non_replaceable_action)
-
-            if has_non_replaceable_changes is None:
-                return
-
-            if (has_non_replaceable_changes is False and confirm and click.confirm(confirm_msg)) \
-                    or (has_non_replaceable_changes is False and confirm is False):
+            if (confirm and click.confirm(confirm_msg)) or confirm is False:
                 secret.update(changes)
 
     def get_sensible_entries(self) -> List[Dict[str, Any]]:

@@ -43,6 +43,8 @@ class SecretManagerEntry(BaseEntry):
             _do_decrypt(self.cipher_text)
         elif self.cipher_text is None and self.raw_value is not None and isinstance(self.raw_value, str):
             _do_decrypt(self.raw_value)
+        else:
+            self.plain_text = str(self.raw_value)
 
         return self.plain_text
 
@@ -65,7 +67,7 @@ class SecretManagerEntry(BaseEntry):
         args = {
             'SecretId': self.name,
             'Description': self.description,
-            'SecretString': self.plain_text
+            'SecretString': self.decrypt()
         }
 
         if self.kms:
@@ -190,16 +192,8 @@ class SecretManagerEntry(BaseEntry):
         return changes
 
     def _get_secret_value(self) -> str:
-        client = self.session.client('secretsmanager')
-        value = ''
-        try:
-            response = client.get_secret_value(
-                SecretId=self.name
-            )
+        response = self.client.get_secret_value(
+            SecretId=self.name
+        )
 
-            value = response['SecretString']
-        except ClientError as e:
-            if e.response['Error']['Code'] != 'ResourceNotFoundException':
-                raise e
-
-        return value
+        return response['SecretString']
