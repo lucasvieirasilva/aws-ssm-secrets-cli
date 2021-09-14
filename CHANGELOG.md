@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [2.0.2] - 2021-09-14
+
+### Fixed
+
+- Fix `aws-secrets` commands, secrets file is not being loaded when the CLI is executed in a different folder. [issue-38](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/38)
+
 ## [2.0.1] - 2021-09-14
 
 ### Fixed
