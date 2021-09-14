@@ -152,6 +152,9 @@ def test_deploy_secrets(
             _secrets_stubs(stubber)
 
             with mock_cli_runner.isolated_filesystem():
+                with open('hello.txt', 'w') as f:
+                    f.write("Hello")
+
                 with open(config_file, 'w') as config:
                     with open(config_file, 'w') as config:
                         config.write(f"""kms:
@@ -160,6 +163,8 @@ secrets:
 - name: secret1
 - name: secret2
   value: !cmd 'value'
+- name: secret3
+  value: !file 'hello.txt'
 secrets_file: ./config.secrets.yaml
 """)
                 with open(secrets_file, 'w') as secrets:
@@ -201,6 +206,9 @@ def test_deploy_secrets_only_secrets_flag(
             _secrets_stubs(stubber)
 
             with mock_cli_runner.isolated_filesystem():
+                with open('hello.txt', 'w') as f:
+                    f.write("Hello")
+
                 with open(config_file, 'w') as config:
                     with open(config_file, 'w') as config:
                         config.write(f"""kms:
@@ -212,6 +220,8 @@ secrets:
 - name: secret1
 - name: secret2
   value: !cmd 'value'
+- name: secret3
+  value: !file 'hello.txt'
 secrets_file: ./config.secrets.yaml
 """)
                 with open(secrets_file, 'w') as secrets:
@@ -278,6 +288,22 @@ def _secrets_stubs(stubber):
     stubber.add_response('untag_resource', {}, {
         'SecretId': 'secret2',
         'TagKeys': []
+    })
+    stubber.add_response('list_secrets', {
+        'SecretList': []
+    }, {
+        'Filters': [
+            {
+                'Key': 'name',
+                'Values': ['secret3']
+            }
+        ]
+    })
+    stubber.add_response('create_secret', {}, {
+        'Name': 'secret3',
+        'Description': '',
+        'SecretString': 'Hello',
+        'Tags': []
     })
 
 

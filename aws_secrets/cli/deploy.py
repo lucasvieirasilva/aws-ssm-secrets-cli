@@ -5,6 +5,7 @@ import click
 from aws_secrets.config.config_reader import ConfigReader
 from aws_secrets.helpers.catch_exceptions import catch_exceptions
 from aws_secrets.miscellaneous import session
+from click.core import Context
 
 logger = logging.getLogger(__name__)
 
@@ -18,8 +19,10 @@ logger = logging.getLogger(__name__)
 @click.option('--only-parameters', help="Deploy only SSM Parameters", is_flag=True)
 @click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
 @click.option('--region', help="AWS Region", envvar='AWS_REGION')
+@click.pass_context
 @catch_exceptions
 def deploy(
+    ctx: Context,
     env_file: str,
     filter_pattern: Optional[str],
     dry_run: bool,
@@ -33,6 +36,7 @@ def deploy(
         Deploy CLI Commmand `aws-secrets deploy --help`
 
         Args:
+            ctx (`Context`): click context object
             env_file (`str`): configuration YAML file
             filter_pattern (`str`, optional): resource filter pattern
             dry_run (`bool`): Dry run flag
@@ -42,6 +46,7 @@ def deploy(
             profile (`str`, optional): AWS Profile
             region (`str`, optional): AWS Region
     """
+    ctx.obj['config_file'] = env_file
     session.aws_profile = profile
     session.aws_region = region
 

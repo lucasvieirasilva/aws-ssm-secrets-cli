@@ -5,6 +5,7 @@ import click
 from aws_secrets.config.config_reader import ConfigReader
 from aws_secrets.helpers.catch_exceptions import catch_exceptions
 from aws_secrets.miscellaneous import session
+from click.core import Context
 
 logger = logging.getLogger(__name__)
 
@@ -16,8 +17,10 @@ logger = logging.getLogger(__name__)
 @click.option('-k', '--kms')
 @click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
 @click.option('--region', help="AWS Region", envvar='AWS_REGION')
+@click.pass_context
 @catch_exceptions
 def set_secret(
+    ctx: Context,
     env_file: str,
     name: str,
     description: Optional[str],
@@ -29,6 +32,7 @@ def set_secret(
         Add/Update AWS Secrets Manager secrets CLI Commmand `aws-secrets set-secret --help`
 
         Args:
+            ctx (`Context`): click context object
             env_file (`str`): configuration YAML file
             name (`str`): SSM parameter name
             description (`str`, optional): SSM parameter description
@@ -36,6 +40,7 @@ def set_secret(
             profile (`str`, optional): AWS Profile
             region (`str`, optional): AWS Region
     """
+    ctx.obj['config_file'] = env_file
     session.aws_profile = profile
     session.aws_region = region
 
