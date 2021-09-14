@@ -1,5 +1,4 @@
-from io import BytesIO
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from aws_secrets.cli.cli import cli
 
@@ -75,18 +74,15 @@ secrets_file: ./config.secrets.yaml
         assert result.output == 'ABC\n'
 
 
-@patch('subprocess.Popen')
+@patch('subprocess.run')
 def test_view_parameter_cli_with_resolver(
-    mock_popen,
+    mock_run,
     mock_cli_runner
 ):
     """
         Should echo the plain text parameter data with resolver
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     config_file = 'config.yaml'
     secrets_file = 'config.secrets.yaml'
@@ -114,18 +110,15 @@ secrets_file: ./config.secrets.yaml
         assert 'myvalue\n' in result.output
 
 
-@patch('subprocess.Popen')
+@patch('subprocess.run')
 def test_view_parameter_cli_with_resolver_type_string(
-    mock_popen,
+    mock_run,
     mock_cli_runner
 ):
     """
         Should echo the plain text parameter data with resolver type string
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     config_file = 'config.yaml'
     secrets_file = 'config.secrets.yaml'
@@ -153,18 +146,15 @@ secrets_file: ./config.secrets.yaml
         assert 'myvalue\n' in result.output
 
 
-@patch('subprocess.Popen')
+@patch('subprocess.run')
 def test_view_parameter_cli_parameter_not_found(
-    mock_popen,
+    mock_run,
     mock_cli_runner
 ):
     """
         Should raise an exception when the parameter does not exist
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     config_file = 'config.yaml'
     secrets_file = 'config.secrets.yaml'

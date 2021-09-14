@@ -1,5 +1,4 @@
-from io import BytesIO
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from aws_secrets.cli.cli import cli
 
@@ -7,19 +6,16 @@ KEY_ARN = 'arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-123456
 
 
 @patch('aws_secrets.miscellaneous.kms.decrypt')
-@patch('subprocess.Popen')
+@patch('subprocess.run')
 def test_decrypt_cli(
-    mock_popen,
+    mock_run,
     mock_decrypt,
     mock_cli_runner
 ):
     """
         Should decrypt a config file
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     mock_decrypt.return_value = b'PlainText'
     config_file = 'config.yaml'

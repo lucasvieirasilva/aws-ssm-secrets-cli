@@ -1,5 +1,4 @@
-from io import BytesIO
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 from aws_secrets.cli.cli import cli
 
@@ -42,18 +41,15 @@ secrets_file: ./config.secrets.yaml
         assert result.output == 'PlainTextData\n'
 
 
-@patch('subprocess.Popen')
+@patch('subprocess.run')
 def test_view_secret_cli_with_resolver(
-    mock_popen,
+    mock_run,
     mock_cli_runner
 ):
     """
         Should echo the plain text secret data with resolver
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     config_file = 'config.yaml'
     secrets_file = 'config.secrets.yaml'
@@ -80,18 +76,15 @@ secrets_file: ./config.secrets.yaml
         assert 'myvalue\n' in result.output
 
 
-@patch('subprocess.Popen')
+@patch('subprocess.run')
 def test_view_secret_cli_not_found(
-    mock_popen,
+    mock_run,
     mock_cli_runner
 ):
     """
         Should raise an exception when the secret does not exist
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     config_file = 'config.yaml'
     secrets_file = 'config.secrets.yaml'

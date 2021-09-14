@@ -47,7 +47,7 @@ class SecretManagerEntry(BaseEntry):
         args = {
             'Name': self.name,
             'Description': self.description,
-            'SecretString': self.decrypt(),
+            'SecretString': str(self.decrypt()),
             'Tags': self.parse_tags()
         }
 
@@ -62,7 +62,7 @@ class SecretManagerEntry(BaseEntry):
         args = {
             'SecretId': self.name,
             'Description': self.description,
-            'SecretString': self.decrypt()
+            'SecretString': str(self.decrypt())
         }
 
         if self.kms:

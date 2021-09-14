@@ -48,7 +48,7 @@ class SSMParameterEntry(BaseEntry):
             'Name': self.name,
             'Description': self.description,
             'Type': self.type,
-            'Value': self.decrypt(),
+            'Value': str(self.decrypt()),
             'Tags': self.parse_tags()
         }
 
@@ -64,7 +64,7 @@ class SSMParameterEntry(BaseEntry):
             'Name': self.name,
             'Description': self.description,
             'Type': self.type,
-            'Value': self.decrypt(),
+            'Value': str(self.decrypt()),
             'Overwrite': True
         }
 

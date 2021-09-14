@@ -1,6 +1,5 @@
-from io import BytesIO
 import json
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import boto3
 from aws_secrets.config.providers.secretsmanager.entry import SecretManagerEntry
@@ -133,17 +132,14 @@ def test_decrypt_with_value_data(mock_decrypt):
     mock_decrypt.assert_called_once_with(session, 'SecretData', KEY_ARN)
 
 
-@patch('subprocess.Popen')
-def test_decrypt_with_value_data_not_str(mock_popen):
+@patch('subprocess.run')
+def test_decrypt_with_value_data_not_str(mock_run):
     """
         Should decrypt the cipher text
     """
 
     session = boto3.Session(region_name='us-east-1')
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     entry = SecretManagerEntry(
         session=session,

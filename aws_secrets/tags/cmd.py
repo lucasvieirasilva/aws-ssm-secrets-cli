@@ -1,9 +1,10 @@
-from aws_secrets.helpers.catch_exceptions import CLIError
+import logging
 import subprocess
 
 import click
 import yaml
-from aws_secrets.miscellaneous import session, cloudformation
+from aws_secrets.helpers.catch_exceptions import CLIError
+from aws_secrets.miscellaneous import cloudformation, session
 from yaml.dumper import SafeDumper
 from yaml.nodes import ScalarNode
 
@@ -31,12 +32,14 @@ class CmdTag(yaml.YAMLObject):
 
         Attributes:
             value (`str`): value after `!cmd` tag (e.g `!cmd some` the value will be `some`)
+            logger (`Logger`): logger instance
     """
 
     yaml_tag = u'!cmd'
 
     def __init__(self, value: str):
         self.value = value
+        self.logger = logging.getLogger(__name__)
 
     def resolve_variables(self) -> None:
         """
@@ -189,10 +192,13 @@ class CmdTag(yaml.YAMLObject):
 
         click.echo(f"Running command: {self.value}")
 
-        proc = subprocess.Popen(self.value.split(" "), stdout=subprocess.PIPE)
-        output = proc.stdout.read()
-        output_value = output.decode('utf-8').strip()
-        return output_value
+        process = subprocess.run(
+            self.value.split(" "),
+            stdout=subprocess.PIPE,
+            encoding='utf-8'
+        )
+
+        return process.stdout.strip()
 
     @classmethod
     def from_yaml(cls, _, node):

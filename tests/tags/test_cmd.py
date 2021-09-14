@@ -1,6 +1,5 @@
 import subprocess
-from io import BytesIO
-from unittest.mock import ANY, Mock, patch
+from unittest.mock import ANY, patch
 
 import pytest
 import yaml
@@ -9,15 +8,12 @@ from aws_secrets.miscellaneous import session
 from aws_secrets.tags.cmd import CmdTag
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag(mock_run):
     """
         Should execute the command and resolve the value
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -27,7 +23,7 @@ key: !cmd "echo 'hello'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo 'hello'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo 'hello'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
 def test_cmd_yaml_tag_dump():
@@ -44,15 +40,12 @@ key: !cmd "echo 'hello'"
     assert yaml.safe_dump(data) == "key: !cmd 'echo ''hello'''\n"
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_session_provider_profile(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_session_provider_profile(mock_run):
     """
         Should execute the command and resolve the value that has the session provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -66,18 +59,15 @@ key: !cmd "echo '${session:profile}'"
     assert 'myvalue' == str(data['key'])
 
     session.aws_profile = None
-    mock_popen.assert_called_once_with("echo 'fake-profile'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo 'fake-profile'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_session_provider_region(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_session_provider_region(mock_run):
     """
         Should execute the command and resolve the value that has the session provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -91,18 +81,15 @@ key: !cmd "echo '${session:region}'"
     assert 'myvalue' == str(data['key'])
 
     session.aws_region = None
-    mock_popen.assert_called_once_with("echo 'us-east-1'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo 'us-east-1'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_session_provider_no_region(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_session_provider_no_region(mock_run):
     """
         Should execute the command and resolve the value that has the session provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -114,18 +101,15 @@ key: !cmd "echo '${session:region}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo ''".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo ''".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_session_provider_default_region(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_session_provider_default_region(mock_run):
     """
         Should execute the command and resolve the value that has the session provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -137,11 +121,11 @@ key: !cmd "echo '${session:region, us-east-1}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo 'us-east-1'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo 'us-east-1'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_session_provider_invalid_prop(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_session_provider_invalid_prop(mock_run):
     """
         Should throw an exception when the session provider has in invalid property
     """
@@ -160,11 +144,11 @@ key: !cmd "echo '${session:dump}'"
     assert 'Property `dump` is not supported, ' + \
         f'provider `session` just supports {str(["profile", "region"])} properties' in str(error.value)
 
-    mock_popen.assert_not_called()
+    mock_run.assert_not_called()
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_invalid_provider(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_invalid_provider(mock_run):
     """
         Should throw an exception when the provider is invalid
     """
@@ -182,19 +166,16 @@ key: !cmd "echo '${dump:dump}'"
 
     assert 'Provider dump is not supported' in str(error.value)
 
-    mock_popen.assert_not_called()
+    mock_run.assert_not_called()
 
 
-@patch('subprocess.Popen')
+@patch('subprocess.run')
 @patch('aws_secrets.miscellaneous.cloudformation.get_output_value')
-def test_cmd_yaml_tag_with_cf_provider(mock_get_output_value, mock_popen):
+def test_cmd_yaml_tag_with_cf_provider(mock_get_output_value, mock_run):
     """
         Should execute the command and resolve the value that has the cf provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
     mock_get_output_value.return_value = 'stack-output'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
@@ -205,20 +186,17 @@ key: !cmd "echo '${cf:stack.output}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo 'stack-output'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo 'stack-output'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
     mock_get_output_value.assert_called_once_with(ANY, 'stack', 'output')
 
 
-@patch('subprocess.Popen')
+@patch('subprocess.run')
 @patch('aws_secrets.miscellaneous.cloudformation.get_output_value')
-def test_cmd_yaml_tag_with_cf_provider_default_value(mock_get_output_value, mock_popen):
+def test_cmd_yaml_tag_with_cf_provider_default_value(mock_get_output_value, mock_run):
     """
         Should execute the command and resolve the value that has the cf provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
     mock_get_output_value.return_value = None
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
@@ -229,19 +207,16 @@ key: !cmd "echo '${cf:stack.output, stack-output}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo 'stack-output'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo 'stack-output'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
     mock_get_output_value.assert_called_once_with(ANY, 'stack', 'output')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_aws_provider_profile(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_aws_provider_profile(mock_run):
     """
         Should execute the command and resolve the value that has the aws provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -255,18 +230,15 @@ key: !cmd "echo '${aws:profile}'"
     assert 'myvalue' == str(data['key'])
 
     session.aws_profile = None
-    mock_popen.assert_called_once_with("echo '--profile fake-profile'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo '--profile fake-profile'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_aws_provider_profile_default_value(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_aws_provider_profile_default_value(mock_run):
     """
         Should execute the command and resolve the value that has the aws provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -278,18 +250,15 @@ key: !cmd "echo '${aws:profile, fake-profile}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo '--profile fake-profile'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo '--profile fake-profile'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_aws_provider_profile_none(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_aws_provider_profile_none(mock_run):
     """
         Should execute the command and resolve the value that has the aws provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -301,18 +270,15 @@ key: !cmd "echo '${aws:profile}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo ''".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo ''".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_aws_provider_region(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_aws_provider_region(mock_run):
     """
         Should execute the command and resolve the value that has the aws provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -326,18 +292,15 @@ key: !cmd "echo '${aws:region}'"
     assert 'myvalue' == str(data['key'])
 
     session.aws_region = None
-    mock_popen.assert_called_once_with("echo '--region us-east-1'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo '--region us-east-1'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_aws_provider_region_default_value(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_aws_provider_region_default_value(mock_run):
     """
         Should execute the command and resolve the value that has the aws provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -349,18 +312,15 @@ key: !cmd "echo '${aws:region, us-east-1}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo '--region us-east-1'".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo '--region us-east-1'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
-@patch('subprocess.Popen')
-def test_cmd_yaml_tag_with_aws_provider_region_none(mock_popen):
+@patch('subprocess.run')
+def test_cmd_yaml_tag_with_aws_provider_region_none(mock_run):
     """
         Should execute the command and resolve the value that has the aws provider
     """
-    process_mock = Mock()
-    process_mock.stdout = BytesIO(b'myvalue')
-
-    mock_popen.return_value = process_mock
+    mock_run.return_value.stdout = 'myvalue'
 
     yaml.SafeLoader.add_constructor('!cmd', CmdTag.from_yaml)
     yaml.SafeDumper.add_multi_representer(CmdTag, CmdTag.to_yaml)
@@ -372,4 +332,4 @@ key: !cmd "echo '${aws:region}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_popen.assert_called_once_with("echo ''".split(" "), stdout=subprocess.PIPE)
+    mock_run.assert_called_once_with("echo ''".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
