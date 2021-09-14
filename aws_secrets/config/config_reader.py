@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+from posixpath import join
 from typing import Any, Dict
 
 import yaml
@@ -67,15 +68,16 @@ class ConfigReader(object):
             Returns:
                 `str`: secrets YAML file path
         """
-        if 'secrets_file' not in self.data:
-            config_file_path = Path(self.config_file)
-            config_filename = config_file_path.stem
-            config_dir = str(config_file_path.parent)
+        config_file_path = Path(self.config_file)
+        config_filename = config_file_path.stem
+        config_dir = str(config_file_path.parent)
 
+        if 'secrets_file' not in self.data:
             secrets_path = os.path.join(config_dir, f'{config_filename}.secrets.yaml')
             self.data['secrets_file'] = secrets_path
-
-        return self.data['secrets_file']
+            return secrets_path
+        else:
+            return str(Path(os.path.join(config_dir, self.data['secrets_file'])).resolve())
 
     def load_providers(self) -> Dict[str, BaseProvider]:
         """

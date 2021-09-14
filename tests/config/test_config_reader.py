@@ -1,8 +1,7 @@
 from unittest.mock import patch
 
 from aws_secrets.config.config_reader import ConfigReader
-from aws_secrets.config.providers.secretsmanager.provider import \
-    SecretsManagerProvider
+from aws_secrets.config.providers.secretsmanager.provider import SecretsManagerProvider
 from aws_secrets.config.providers.ssm.provider import SSMProvider
 from aws_secrets.miscellaneous import session
 from aws_secrets.tags.cmd import CmdTag
@@ -33,19 +32,19 @@ def test_config_reader_secrets_path_prop(boto_fs):
     """
         Should read the secrets path file from the config yaml
     """
-    config_file = 'config.yaml'
+    config_file = 'ssm/config.yaml'
     session.aws_profile = None
     session.aws_region = 'us-east-1'
 
     boto_fs.create_file(config_file, contents=f"""
 kms:
     arn: {KEY_ARN}
-secrets_file: config.secrets.yaml
+secrets_file: ./config.secrets.yaml
 """)
 
     config = ConfigReader(config_file)
 
-    assert config.secrets_file_path == 'config.secrets.yaml'
+    assert config.secrets_file_path == '/ssm/config.secrets.yaml'
 
 
 @patch('aws_secrets.miscellaneous.kms.decrypt')
