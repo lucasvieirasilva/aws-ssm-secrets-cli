@@ -1,6 +1,5 @@
 import logging
 import os
-from pathlib import Path
 
 import click
 import yaml
@@ -46,10 +45,11 @@ class FileTag(yaml.YAMLObject):
             config_file = click_ctx.obj.get('config_file', '')
             working_dir = os.path.dirname(config_file)
 
-        source_file_path = Path(os.path.relpath(self.value, working_dir)).resolve()
+        source_file_path = os.path.join(working_dir, self.value)
 
-        if source_file_path.exists():
-            return source_file_path.read_text()
+        if os.path.exists(source_file_path):
+            with open(source_file_path, 'r') as source:
+                return source.read()
         else:
             raise CLIError(f"File '{source_file_path}' not found")
 

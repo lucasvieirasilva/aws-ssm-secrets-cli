@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [2.0.3] - 2021-09-14
+
+### Fixed
+
+- Fix `!file` resolver, the path is not being resolved correctly based on the config directory. [issue-40](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/40)
+
 ## [2.0.2] - 2021-09-14
 
 ### Fixed
