@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Fixed
+
+- Value changes always being detected in the deploy command when use YAML resolver. [issue-35](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/35)
+
 ## [2.0.0] - 2021-09-14
 
 ### Added

@@ -127,7 +127,7 @@ class SecretManagerEntry(BaseEntry):
 
             aws_secret = resp['SecretList'][0]
             aws_secret_value = self._get_secret_value()
-            yaml_secret_value = self.decrypt()
+            yaml_secret_value = str(self.decrypt())
 
             if aws_secret_value != yaml_secret_value:
                 changes['ChangesList'].append(

@@ -133,7 +133,7 @@ class SSMParameterEntry(BaseEntry):
             aws_param = aws_parameters[0]
 
             aws_param_value = self._get_aws_value(aws_param['Type'])
-            yaml_param_value = self.decrypt()
+            yaml_param_value = str(self.decrypt())
 
             if aws_param_value != yaml_param_value:
                 changes['ChangesList'].append(
