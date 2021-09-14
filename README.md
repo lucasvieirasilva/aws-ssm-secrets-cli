@@ -289,6 +289,20 @@ aws-secrets deploy
 
 This CLI implements resolvers, which can be used to resolve the value of a command output or a CloudFormation output value.
 
+##### !file
+
+This resolver is designed to load a file content to the SSM Parameter or Secrets Manager Value.
+
+Example:
+
+```yaml
+...
+secrets:
+  - name: mysecret
+    value: !file myfile.txt
+...
+```
+
 ##### !cf_output
 
 This resolver can be used in `parameters[*].value`, `secrets[*].value` and `kms.arn` properties.

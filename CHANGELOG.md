@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Add `!file` YAML resolver. [issue-26](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/26)
+
 ### Changed
 
 - Store the Ciphertext in a separate file. [issue-25](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/25)
