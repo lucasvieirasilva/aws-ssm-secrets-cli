@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 @click.option('--confirm', help="Confirm prompt before apply the changes", is_flag=True)
 @click.option('--only-secrets', help="Deploy only AWS Secrets", is_flag=True)
 @click.option('--only-parameters', help="Deploy only SSM Parameters", is_flag=True)
-@click.option('--profile', help="AWS Profile")
-@click.option('--region', help="AWS Region")
+@click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
+@click.option('--region', help="AWS Region", envvar='AWS_REGION')
 @catch_exceptions
 def deploy(
     env_file: str,

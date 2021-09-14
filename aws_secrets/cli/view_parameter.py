@@ -8,8 +8,8 @@ from aws_secrets.miscellaneous import session
 @click.command(name='view-parameter', help='View decrypted SSM parameter value')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('-n', '--name', required=True)
-@click.option('--profile')
-@click.option('--region')
+@click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
+@click.option('--region', help="AWS Region", envvar='AWS_REGION')
 @catch_exceptions
 def view_parameter(
     env_file: str,

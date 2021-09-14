@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 @click.option('-n', '--name', required=True)
 @click.option('-d', '--description', help='Secret Description', required=False)
 @click.option('-k', '--kms')
-@click.option('--profile')
-@click.option('--region')
+@click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
+@click.option('--region', help="AWS Region", envvar='AWS_REGION')
 @catch_exceptions
 def set_secret(
     env_file: str,

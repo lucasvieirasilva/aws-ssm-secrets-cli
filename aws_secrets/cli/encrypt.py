@@ -7,8 +7,8 @@ from aws_secrets.miscellaneous import session
 
 @click.command(name='encrypt', help='Encrypt a configuration file')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
-@click.option('--profile', envvar='AWS_PROFILE')
-@click.option('--region', envvar='AWS_REGION')
+@click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
+@click.option('--region', help="AWS Region", envvar='AWS_REGION')
 @catch_exceptions
 def encrypt(
     env_file: str,

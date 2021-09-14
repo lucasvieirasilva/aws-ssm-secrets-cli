@@ -14,8 +14,8 @@ from aws_secrets.miscellaneous import session
               required=True, type=click.Choice(['String', 'SecureString'], case_sensitive=True),
               default='SecureString')
 @click.option('-k', '--kms')
-@click.option('--profile', envvar='AWS_PROFILE')
-@click.option('--region', envvar='AWS_REGION')
+@click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
+@click.option('--region', help="AWS Region", envvar='AWS_REGION')
 @catch_exceptions
 def set_parameter(
     env_file: str,

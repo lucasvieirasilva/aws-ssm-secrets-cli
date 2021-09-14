@@ -8,8 +8,8 @@ from aws_secrets.miscellaneous import session
 @click.command(name='view-secret', help='View decrypted AWS Secrets Manager secret value')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('-n', '--name', required=True)
-@click.option('--profile')
-@click.option('--region')
+@click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
+@click.option('--region', help="AWS Region", envvar='AWS_REGION')
 @catch_exceptions
 def view_secret(
     env_file: str,
