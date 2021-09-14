@@ -43,9 +43,8 @@ class FileTag(yaml.YAMLObject):
         working_dir = os.getcwd()
 
         if click_ctx:
-            config_file = click.get_current_context(silent=True).obj.get('config_file', None)
-            if config_file is not None:
-                working_dir = os.path.basename(config_file)
+            config_file = click_ctx.obj.get('config_file', '')
+            working_dir = os.path.dirname(config_file)
 
         source_file_path = Path(os.path.relpath(self.value, working_dir)).resolve()
 
