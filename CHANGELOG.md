@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [2.0.0] - 2021-09-14
+
 ### Added
 
 - Add `!file` YAML resolver. [issue-26](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/26)

@@ -17,4 +17,4 @@ yaml.SafeDumper.add_multi_representer(FileTag, FileTag.to_yaml)
 
 yaml.SafeDumper.add_representer(Literal, literal_presenter)
 
-__version__ = '1.2.0b1'
+__version__ = '2.0.0'
