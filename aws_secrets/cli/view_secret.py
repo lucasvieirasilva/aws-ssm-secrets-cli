@@ -1,30 +1,39 @@
+from typing import Optional
 import click
-import yaml
-from aws_secrets.miscellaneous import kms
+from aws_secrets.config.config_reader import ConfigReader
+from aws_secrets.helpers.catch_exceptions import CLIError, catch_exceptions
 from aws_secrets.miscellaneous import session
 
 
-@click.command(name='view-secret')
+@click.command(name='view-secret', help='View decrypted AWS Secrets Manager secret value')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('-n', '--name', required=True)
-@click.option('--profile')
-@click.option('--region')
-def view_secret(env_file, name, profile, region):
+@click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
+@click.option('--region', help="AWS Region", envvar='AWS_REGION')
+@catch_exceptions
+def view_secret(
+    env_file: str,
+    name: str,
+    profile: Optional[str],
+    region: Optional[str]
+):
+    """
+        View AWS Secrets Manager secret value CLI Commmand `aws-secrets view-parameter --help`
+
+        Args:
+            env_file (`str`): configuration YAML file
+            name (`str`): SSM parameter name
+            profile (`str`, optional): AWS Profile
+            region (`str`, optional): AWS Region
+    """
     session.aws_profile = profile
     session.aws_region = region
 
-    with open(env_file, 'r') as env:
-        yaml_data = yaml.safe_load(env.read())
-
-    secret = next(
-        (param for param in yaml_data['secrets'] if param['name'] == name), None)
+    config = ConfigReader(env_file)
+    provider = config.get_provider('secrets')
+    secret = provider.find(name)
 
     if secret is None:
-        raise Exception(f'secret {name} not found')
+        raise CLIError(f'secret {name} not found')
 
-    kms_arn = str(yaml_data['kms']['arn'])
-
-    param_value = kms.decrypt(
-        session.session(), str(secret['value']), kms_arn).decode('utf-8')
-
-    print(param_value)
+    click.echo(secret.decrypt())

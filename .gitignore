@@ -1,4 +1,8 @@
-.vscode
 __pycache__
 dist
 *.egg-info
+
+reports/
+coverage/
+
+.coverage

@@ -1,0 +1,10 @@
+[tool.coverage.run]
+branch = true
+source = [ "aws_secrets" ]
+
+[tool.coverage.report]
+exclude_lines = [ ]
+show_missing = true
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report html:'coverage/html' --cov-report xml:'coverage/coverage.xml'"

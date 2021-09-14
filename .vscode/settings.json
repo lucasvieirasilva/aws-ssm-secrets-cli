@@ -1,0 +1,6 @@
+{
+  "sonarlint.connectedMode.project": {
+    "projectKey": "lucasvieirasilva_aws-ssm-secrets-cli"
+  },
+  "python.sortImports.args": ["-l", "120"]
+}

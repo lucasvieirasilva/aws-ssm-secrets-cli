@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Store the Ciphertext in a separate file. [issue-25](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/25)
+- Add Global Catch Exception Handler to the CLI to avoid StackTrace messages. [issue-30](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/30)
+
+#### BREAKING CHANGES
+
+The changes in this PR are breaking changes.
+
+The current version of the AWS Secrets CLI stores the values in the same config file and the new version look at another file.
+
+Migration process:
+
+To create the new `*.secrets.yaml` file, the AWS Secrets CLI needs to re-encrypt the config file.
+
+```shell
+aws-secrets decrypt -e <config-file> --output <decrypted-file>
+```
+
+```shell
+aws-secrets encrypt -e <decrypted-file>
+```
+
+Remove the original file, rename the two new files to match with the original name, and modify the property `secrets_file` in the configuration YAML file.
+
 ## [1.2.0] - 2021-08-20
 
 ### Added

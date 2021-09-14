@@ -10,15 +10,13 @@ When you need to manage SSM parameter (SecureString) in multiple AWS Environment
 
 AWS Secrets CLI provides you a Command Line Interface that manages your secrets using [KMS](https://aws.amazon.com/pt/kms/), so you can store the config file into your git repository because your secrets will not expose, only for people that have access to KMS Key.
 
-## Getting Started
-
-### Install
+## Install
 
 ```shell
 pip install aws-ssm-secrets-cli
 ```
 
-### Requirements
+## Requirements
 
 It is necessary to create a KMS key before starting to create the parameter using the CLI.
 
@@ -80,9 +78,9 @@ Outputs:
     Value: !GetAtt Key.Arn
 ```
 
-### Getting Started
+## Getting Started
 
-#### Our fist config
+### Our fist config
 
 For naming convention, you should give the environment name for the file name (e.g., dev.yaml)
 
@@ -100,7 +98,7 @@ secrets:
       #      prop: 'Value'
 ```
 
-#### Encrypt
+### Encrypt
 
 To encrypt the parameter values, you need to use this command:
 
@@ -108,7 +106,7 @@ To encrypt the parameter values, you need to use this command:
 aws-secrets encrypt -e dev.yaml --profile myprofile --region eu-west-1
 ```
 
-#### Decrypt
+### Decrypt
 
 To edit the values, you can decrypt and re-encrypt the parameter values. You need to use this command:
 
@@ -128,7 +126,7 @@ After your changes you need to re-encrypt, you can do it using this command:
 aws-secrets encrypt -e dev.yaml --profile myprofile --region eu-west-1
 ```
 
-#### Create parameters into AWS Account
+### Create parameters into AWS Account
 
 To deploy the parameter that you created on the last step, you need to execute this command:
 
@@ -138,7 +136,7 @@ aws-secrets deploy -e dev.yaml --profile myaws-profile --region eu-west-1
 
 Now your parameters have been created in AWS Account.
 
-### Command Line Interface
+## Command Line Interface
 
 Command options differ depending on the command, and can be found by running:
 
@@ -158,7 +156,7 @@ aws-secrets encrypt
   [--region]
 ```
 
-### Options
+#### Options
 
 | Option               | Description           | Data Type | Required | Options | Default |
 | -------------------- | --------------------- | --------- | -------- | ------- | ------- |
@@ -177,7 +175,7 @@ aws-secrets decrypt
   [--region]
 ```
 
-### Options
+#### Options
 
 | Option               | Description           | Data Type | Required | Options | Default |
 | -------------------- | --------------------- | --------- | -------- | ------- | ------- |
@@ -200,7 +198,7 @@ aws-secrets set-parameter
   [--region]
 ```
 
-### Options
+#### Options
 
 | Option                  | Description               | Data Type | Required | Options                     | Default        |
 | ----------------------- | ------------------------- | --------- | -------- | --------------------------- | -------------- |
@@ -226,7 +224,7 @@ aws-secrets set-secret
   [--region]
 ```
 
-### Options
+#### Options
 
 | Option                  | Description           | Data Type | Required | Options | Default |
 | ----------------------- | --------------------- | --------- | -------- | ------- | ------- |
@@ -245,20 +243,18 @@ View the SSM parameter value in the environment file.
 aws-secrets view-parameter
   --env-file
   --name
-  [--non-decrypt]
   [--profile]
   [--region]
 ```
 
-### Options
+#### Options
 
-| Option               | Description                                                      | Data Type | Required | Options | Default |
-| -------------------- | ---------------------------------------------------------------- | --------- | -------- | ------- | ------- |
-| `--env-file` or `-e` | Environment file path                                            | `String`  | `true`   |         |         |
-| `--name` or `-n`     | SSM Parameter Name                                               | `String`  | `true`   |         |         |
-| `--non-decrypt`      | Used when you want to view an SecureString value without decrypt | `Boolean` | `false`  |         | `false` |
-| `--profile`          | AWS Profile                                                      | `String`  | `false`  |         |         |
-| `--region`           | AWS Region                                                       | `String`  | `false`  |         |         |
+| Option               | Description           | Data Type | Required | Options | Default |
+| -------------------- | --------------------- | --------- | -------- | ------- | ------- |
+| `--env-file` or `-e` | Environment file path | `String`  | `true`   |         |         |
+| `--name` or `-n`     | SSM Parameter Name    | `String`  | `true`   |         |         |
+| `--profile`          | AWS Profile           | `String`  | `false`  |         |         |
+| `--region`           | AWS Region            | `String`  | `false`  |         |         |
 
 ### deploy
 
@@ -276,7 +272,7 @@ aws-secrets deploy
   [--region]
 ```
 
-### Options
+#### Options
 
 | Option               | Description                                                                                             | Data Type | Required | Options | Default |
 | -------------------- | ------------------------------------------------------------------------------------------------------- | --------- | -------- | ------- | ------- |
@@ -289,11 +285,11 @@ aws-secrets deploy
 | `--profile`          | AWS Profile                                                                                             | `String`  | `false`  |         |         |
 | `--region`           | AWS Region                                                                                              | `String`  | `false`  |         |         |
 
-### Resolvers
+#### Resolvers
 
 This CLI implements resolvers, which can be used to resolve the value of a command output or a CloudFormation output value.
 
-#### !cf_output
+##### !cf_output
 
 This resolver can be used in `parameters[*].value`, `secrets[*].value` and `kms.arn` properties.
 
@@ -308,7 +304,7 @@ parameters:
     value: !cf_output "mystack.MyOutputKey"
 ```
 
-#### !cmd
+##### !cmd
 
 This resolver can be used in `parameters[*].value` and `secrets[*].value` properties.
 
@@ -321,12 +317,9 @@ parameters:
   - name: myparameter-name
     type: SecureString
     value: !cmd 'echo "Teste"'
-    decryptOnDeploy: false
 ```
 
-> If you use `!cmd` resolver with `SecureString`, you must disable the decryption action on the deployment. Otherwise, the CLI will try to decrypt the resolved value, and the process will be failed.
-
-##### providers
+###### providers
 
 ###### cf
 
@@ -380,16 +373,14 @@ ${aws:profile, 'myprofile'} or ${aws:region, 'us-east-1'}
 
 With the config file:
 
-``` yaml
+```yaml
 kms:
-  arn: !cf_output 'mystack.KeyArn'
+  arn: !cf_output "mystack.KeyArn"
 parameters:
-- decryptOnDeploy: false
-  description: My SSM Parameter
-  name: /my/ssm/param
-  type: SecureString
-  value: !cmd 'aws s3 ls ${aws:profile} ${aws:region, "eu-west-1"}'
-
+  - description: My SSM Parameter
+    name: /my/ssm/param
+    type: SecureString
+    value: !cmd 'aws s3 ls ${aws:profile} ${aws:region, "eu-west-1"}'
 ```
 
 When run the `aws-secrets` with the `--profile` or `--region`

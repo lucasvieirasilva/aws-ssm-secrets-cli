@@ -1,10 +1,12 @@
+from typing import Optional
+
 import click
-import yaml
-from aws_secrets.miscellaneous.kms import encrypt
+from aws_secrets.config.config_reader import ConfigReader
+from aws_secrets.helpers.catch_exceptions import catch_exceptions
 from aws_secrets.miscellaneous import session
 
 
-@click.command(name='set-parameter')
+@click.command(name='set-parameter', help='Add/Update SSM Parameters')
 @click.option('-e', '--env-file', type=click.Path(), required=True)
 @click.option('-n', '--name', prompt=True, required=True)
 @click.option('-d', '--description', help='SSM Parameter Description', required=False)
@@ -12,34 +14,47 @@ from aws_secrets.miscellaneous import session
               required=True, type=click.Choice(['String', 'SecureString'], case_sensitive=True),
               default='SecureString')
 @click.option('-k', '--kms')
-@click.option('--profile')
-@click.option('--region')
-def set_parameter(env_file, name, description, type, kms, profile, region):
+@click.option('--profile', help="AWS Profile", envvar='AWS_PROFILE')
+@click.option('--region', help="AWS Region", envvar='AWS_REGION')
+@catch_exceptions
+def set_parameter(
+    env_file: str,
+    name: str,
+    description: Optional[str],
+    type: str,
+    kms: Optional[str],
+    profile: Optional[str],
+    region: Optional[str]
+):
+    """
+        Add/Update SSM Parameters CLI Commmand `aws-secrets set-parameter --help`
+
+        Args:
+            env_file (`str`): configuration YAML file
+            name (`str`): SSM parameter name
+            description (`str`, optional): SSM parameter description
+            type (`str`): SSM parameter type
+            kms (`str`, optional): SSM parameter KMS Arn or Id
+            profile (`str`, optional): AWS Profile
+            region (`str`, optional): AWS Region
+    """
     session.aws_profile = profile
     session.aws_region = region
-    with open(env_file, 'r') as env:
-        yaml_data = yaml.safe_load(env.read())
+    config = ConfigReader(env_file)
+    provider = config.get_provider('parameters')
 
-    if 'parameters' not in yaml_data:
-        yaml_data['parameters'] = []
-
-    parameter = next(
-        (param for param in yaml_data['parameters'] if param['name'] == name), None)
-
-    if parameter is None:
-        parameter = {
-            'name': name,
-            'type': type,
-        }
-        yaml_data['parameters'].append(parameter)
+    context_data = {
+        'name': name,
+        'type': type,
+    }
 
     if description:
-        parameter['description'] = description
+        context_data['description'] = description
 
     if kms:
-        parameter['kms'] = kms
+        context_data['kms'] = kms
 
-    print("Enter/Paste your secret. Ctrl-D or Ctrl-Z ( windows ) to save it.")
+    click.echo("Enter/Paste your secret. Ctrl-D or Ctrl-Z ( windows ) to save it.")
     contents = []
     while True:
         try:
@@ -48,16 +63,13 @@ def set_parameter(env_file, name, description, type, kms, profile, region):
             break
         contents.append(line)
 
-    value = '\n'.join(contents)
+    context_data['value'] = '\n'.join(contents)
 
-    if parameter['type'] == 'SecureString':
-        kms_arn = str(yaml_data['kms']['arn'])
-        print('Encrypting the value')
-        encrypted_value = encrypt(session.session(), value, kms_arn)
-        parameter['value'] = encrypted_value.decode('utf-8')
+    parameter = provider.find(name)
+    if parameter is None:
+        parameter = provider.add(context_data)
     else:
-        print('Put new value to the parameter')
-        parameter['value'] = value
+        provider.update(context_data)
 
-    with open(env_file, 'w') as outfile:
-        yaml.safe_dump(yaml_data, outfile)
+    config.encrypt()
+    config.save()
