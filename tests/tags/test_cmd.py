@@ -251,8 +251,7 @@ key: !cmd "echo '${aws:profile, fake-profile}'"
 """)
 
     assert 'myvalue' == str(data['key'])
-    mock_run.assert_called_once_with("echo '--profile fake-profile'".split(" "),
-                                     stdout=subprocess.PIPE, encoding='utf-8')
+    mock_run.assert_called_once_with("echo '--profile fake-profile'".split(" "), stdout=subprocess.PIPE, encoding='utf-8')
 
 
 @patch('subprocess.run')
