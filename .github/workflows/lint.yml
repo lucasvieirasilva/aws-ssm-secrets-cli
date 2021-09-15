@@ -27,6 +27,6 @@ jobs:
     - name: Run flake8
       uses: reviewdog/action-flake8@v3
       with:
-        reporter: github-check
+        reporter: github-pr-check
         fail_on_error: true
         github_token: ${{ secrets.GITHUB_TOKEN }}
