@@ -1,10 +1,16 @@
+"""
+Version command (aws-secrets version)
+"""
+
 import click
-from aws_secrets import __version__
+import pkg_resources
+from aws_secrets import __title__
 
 
-@click.command(name='version', help='Print version')
+@click.command(name='version', help='Print CLI version')
 def version():
     """
-        Version command `aws-secrets version`
+        Version command prints the CLI version on the console.
     """
-    click.echo(f"Version: {__version__}")
+    version = pkg_resources.get_distribution(__title__).version
+    click.echo(f"Version: {version}")
