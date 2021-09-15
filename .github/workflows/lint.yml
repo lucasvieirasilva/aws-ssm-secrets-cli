@@ -10,7 +10,7 @@ on:
     branches: [ master ]
 
 jobs:
-  build:
+  flake8:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -36,6 +36,6 @@ jobs:
     - name: Run flake8
       uses: suo/flake8-github-action@releases/v1
       with:
-        checkName: 'Flake8 Check'
+        checkName: 'flake8'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
