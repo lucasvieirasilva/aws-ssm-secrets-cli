@@ -25,8 +25,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Run flake8
-      uses: reviewdog/action-flake8@v3
+      uses: TrueBrain/actions-flake8@v2
       with:
-        reporter: github-pr-check
-        fail_on_error: true
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+        flake8_version: 3.9.2
