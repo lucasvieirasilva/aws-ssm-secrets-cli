@@ -1,12 +1,11 @@
 import os
 from pathlib import Path
-from posixpath import join
 from typing import Any, Dict
 
 import yaml
+
 from aws_secrets.config.providers import BaseProvider
-from aws_secrets.config.providers.secretsmanager.provider import \
-    SecretsManagerProvider
+from aws_secrets.config.providers.secretsmanager.provider import SecretsManagerProvider
 from aws_secrets.config.providers.ssm.provider import SSMProvider
 from aws_secrets.miscellaneous import session
 
