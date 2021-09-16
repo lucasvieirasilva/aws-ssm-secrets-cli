@@ -6,7 +6,14 @@ from typing import Any, Callable, Dict, List, Optional
 import click
 import six
 from botocore.session import Session
+from jsonschema.exceptions import ValidationError
+from jsonschema.validators import extend, Draft3Validator
+
+from aws_secrets.helpers.catch_exceptions import CLIError
 from aws_secrets.miscellaneous import utils
+from aws_secrets.tags.cmd import CmdTag
+from aws_secrets.tags.file import FileTag
+from aws_secrets.tags.output_stack import OutputStackTag
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -64,6 +71,53 @@ class BaseEntry:
 
         self.raw_value = data.get('value', None)
         self.cipher_text = cipher_text
+
+        self.validate_schema()
+
+    def validate_schema(self) -> None:
+        """
+            validate JSON schema
+        """
+
+        def is_string_or_yaml_tag_type(_, instance):
+            """
+                Check if the type is string or one of the YAML tags:
+
+                Supported tags:
+                    - !cmd
+                    - !file
+                    - !cf_output
+
+                Args:
+                    _ (`Checker`): JSON schema checker object
+                    instance (`Any`): property value
+
+                Returns:
+                    `bool`: if the instance is string or YAML tags
+            """
+            return (
+                Draft3Validator.TYPE_CHECKER.is_type(instance, "string") or
+                isinstance(instance, CmdTag) or
+                isinstance(instance, FileTag) or
+                isinstance(instance, OutputStackTag)
+            )
+
+        try:
+            type_checker = Draft3Validator.TYPE_CHECKER.redefine('string', is_string_or_yaml_tag_type)
+            CustomValidator = extend(Draft3Validator, type_checker=type_checker)
+            validator = CustomValidator(schema=self.schema())
+            validator.validate(instance=self._data)
+        except ValidationError as error:
+            raise CLIError(f"Entry '{self.name}' is not valid, error: {str(error)}")
+
+    @abc.abstractmethod
+    def schema(self) -> dict:
+        """
+            Schema validation definition
+
+            Returns:
+                `dict`: JSON Schema format
+        """
 
     @abc.abstractmethod
     def decrypt(self) -> str:

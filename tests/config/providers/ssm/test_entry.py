@@ -1,8 +1,11 @@
 from unittest.mock import patch
 
 import boto3
-from aws_secrets.config.providers.ssm.entry import SSMParameterEntry
+import pytest
 from botocore.stub import Stubber
+
+from aws_secrets.config.providers.ssm.entry import SSMParameterEntry
+from aws_secrets.helpers.catch_exceptions import CLIError
 
 KEY_ARN = 'arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab'
 KEY_ARN1 = 'arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab1'
@@ -63,18 +66,19 @@ def test_encrypt_invalid_type(mock_encrypt):
 
     session = boto3.Session(region_name='us-east-1')
 
-    entry = SSMParameterEntry(
-        session=session,
-        kms_arn=KEY_ARN,
-        data={
-            'name': 'ssm-param',
-            'type': 'Invalid'
-        },
-        cipher_text='SecretData'
-    )
+    with pytest.raises(CLIError) as error:
+        SSMParameterEntry(
+            session=session,
+            kms_arn=KEY_ARN,
+            data={
+                'name': 'ssm-param',
+                'type': 'Invalid'
+            },
+            cipher_text='SecretData'
+        )
 
-    assert entry.encrypt() is None
-    mock_encrypt.assert_not_called()
+        assert "'Invalid' is not one of ['String', 'SecureString']" in str(error.value)
+        mock_encrypt.assert_not_called()
 
 
 @patch('aws_secrets.miscellaneous.kms.decrypt')
