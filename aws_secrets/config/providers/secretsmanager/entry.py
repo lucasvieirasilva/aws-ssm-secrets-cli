@@ -18,6 +18,23 @@ class SecretManagerEntry(BaseEntry):
 
         self.client = self.session.client('secretsmanager')
 
+    def schema(self) -> dict:
+        return {
+            "type": "object",
+            "description": "AWS Secrets Manager Entry",
+            "required": ["name"],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "Secret Name"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Secret Description"
+                }
+            }
+        }
+
     def encrypt(self) -> Optional[str]:
         if isinstance(self.raw_value, str) or isinstance(self.raw_value, dict):
             if type(self.raw_value) is dict:

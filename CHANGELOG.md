@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Changed
+
+- Add Schema Validation for the SSM Parameters and Secrets Manager. [issue-42](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/42)
+
 ### Nonfunctional
 
 - Migrate the project structure to use Poetry. [issue-34](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/34)

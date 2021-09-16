@@ -1,8 +1,9 @@
 from typing import Any, Dict, List, Optional
 
+from botocore.session import Session
+
 from aws_secrets.config.providers import BaseEntry
 from aws_secrets.miscellaneous import kms
-from botocore.session import Session
 
 
 class SSMParameterEntry(BaseEntry):
@@ -17,6 +18,28 @@ class SSMParameterEntry(BaseEntry):
 
         self.type = data['type']
         self.client = self.session.client('ssm')
+
+    def schema(self) -> dict:
+        return {
+            "type": "object",
+            "description": "SSM Parameter Entry",
+            "required": ["name", "type"],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "SSM Parameter Name"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "SSM Parameter Type",
+                    "enum": ["String", "SecureString"]
+                },
+                "description": {
+                    "type": "string",
+                    "description": "SSM Parameter Description"
+                }
+            }
+        }
 
     def encrypt(self) -> Optional[str]:
         if self.type == 'SecureString' and self.raw_value and isinstance(self.raw_value, str):

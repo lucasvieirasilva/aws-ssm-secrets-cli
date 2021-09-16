@@ -6,6 +6,10 @@ from typing import Any, Callable, Dict, List, Optional
 import click
 import six
 from botocore.session import Session
+from jsonschema.exceptions import ValidationError
+from jsonschema.validators import validate
+
+from aws_secrets.helpers.catch_exceptions import CLIError
 from aws_secrets.miscellaneous import utils
 
 
@@ -64,6 +68,27 @@ class BaseEntry:
 
         self.raw_value = data.get('value', None)
         self.cipher_text = cipher_text
+
+        self.validate_schema()
+
+    def validate_schema(self) -> None:
+        """
+            validate JSON schema
+        """
+
+        try:
+            validate(instance=self._data, schema=self.schema())
+        except ValidationError as error:
+            raise CLIError(f"Entry '{self.name}' is not valid, error: {str(error)}")
+
+    @abc.abstractmethod
+    def schema(self) -> dict:
+        """
+            Schema validation definition
+
+            Returns:
+                `dict`: JSON Schema format
+        """
 
     @abc.abstractmethod
     def decrypt(self) -> str:
