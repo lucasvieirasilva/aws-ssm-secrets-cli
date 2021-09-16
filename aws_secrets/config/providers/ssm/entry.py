@@ -17,6 +17,7 @@ class SSMParameterEntry(BaseEntry):
         super(SSMParameterEntry, self).__init__(session, kms_arn, data, cipher_text)
 
         self.type = data['type']
+        self.tier = data.get('tier', 'Standard')
         self.client = self.session.client('ssm')
 
     def schema(self) -> dict:
@@ -51,6 +52,11 @@ class SSMParameterEntry(BaseEntry):
                 "kms": {
                     "type": "string",
                     "description": "SSM Parameter Kms Key Id or ARN"
+                },
+                "tier": {
+                    "type": "string",
+                    "description": "SSM Parameter Tier",
+                    "enum": ["Standard", "Advanced", "Intelligent-Tiering"]
                 },
                 "tags": {
                     "type": "object",
@@ -91,6 +97,7 @@ class SSMParameterEntry(BaseEntry):
             'Description': self.description,
             'Type': self.type,
             'Value': str(self.decrypt()),
+            'Tier': self.tier,
             'Tags': self.parse_tags()
         }
 
@@ -107,6 +114,7 @@ class SSMParameterEntry(BaseEntry):
             'Description': self.description,
             'Type': self.type,
             'Value': str(self.decrypt()),
+            'Tier': self.tier,
             'Overwrite': True
         }
 
@@ -221,6 +229,18 @@ class SSMParameterEntry(BaseEntry):
                         'Replaceable': False,
                         'Value': self.type,
                         'OldValue': aws_param['Type']
+                    }
+                )
+
+            if self.tier != aws_param['Tier']:
+                changes['ChangesList'].append(
+                    {
+                        'Key': 'Tier',
+                        'HasChanges': True,
+                        'Replaceable': aws_param['Tier'] == 'Standard' and
+                        (self.tier == 'Advanced' or self.tier == 'Intelligent-Tiering'),
+                        'Value': self.tier,
+                        'OldValue': aws_param['Tier']
                     }
                 )
 

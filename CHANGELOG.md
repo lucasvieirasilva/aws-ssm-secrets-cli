@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+### Added
+
+- Add `Tier` property in the SSM parameter section. [issue-27](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/27)
+
 ### Changed
 
 - Add Schema Validation for the SSM Parameters and Secrets Manager. [issue-42](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/42)
