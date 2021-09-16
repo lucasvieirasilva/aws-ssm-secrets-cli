@@ -394,7 +394,8 @@ def test_ssm_provider_deploy_dry_run(
                 'Parameters': [{
                     'Name': 'ssm-param1',
                     'Description': '',
-                    'Type': 'String'
+                    'Type': 'String',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -423,7 +424,8 @@ def test_ssm_provider_deploy_dry_run(
                 'Parameters': [{
                     'Name': 'ssm-param2',
                     'Description': '',
-                    'Type': 'SecureString'
+                    'Type': 'SecureString',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -520,7 +522,8 @@ def test_ssm_provider_deploy_confirm_no(
                 'Parameters': [{
                     'Name': 'ssm-param1',
                     'Description': '',
-                    'Type': 'String'
+                    'Type': 'String',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -549,7 +552,8 @@ def test_ssm_provider_deploy_confirm_no(
                 'Parameters': [{
                     'Name': 'ssm-param2',
                     'Description': '',
-                    'Type': 'SecureString'
+                    'Type': 'SecureString',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -644,13 +648,15 @@ def test_ssm_provider_deploy(
                 'Description': '',
                 'Type': 'String',
                 'Value': 'PlainTextData',
+                'Tier': 'Standard',
                 'Tags': []
             })
             stubber.add_response('describe_parameters', {
                 'Parameters': [{
                     'Name': 'ssm-param1',
                     'Description': '',
-                    'Type': 'String'
+                    'Type': 'String',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -679,7 +685,8 @@ def test_ssm_provider_deploy(
                 'Parameters': [{
                     'Name': 'ssm-param2',
                     'Description': '',
-                    'Type': 'SecureString'
+                    'Type': 'SecureString',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -709,6 +716,7 @@ def test_ssm_provider_deploy(
                 'Description': '',
                 'Type': 'SecureString',
                 'Value': 'PlainTextData',
+                'Tier': 'Standard',
                 'Overwrite': True
             })
             stubber.add_response('remove_tags_from_resource', {}, {
@@ -774,7 +782,8 @@ def test_ssm_provider_deploy_no_changes(
                 'Parameters': [{
                     'Name': 'ssm-param1',
                     'Description': '',
-                    'Type': 'String'
+                    'Type': 'String',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -845,7 +854,8 @@ def test_ssm_provider_deploy_non_replaceable_attrs(
                 'Parameters': [{
                     'Name': 'ssm-param1',
                     'Description': '',
-                    'Type': 'String'
+                    'Type': 'String',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -878,6 +888,7 @@ def test_ssm_provider_deploy_non_replaceable_attrs(
                 'Description': '',
                 'Type': 'SecureString',
                 'Value': 'PlainTextData',
+                'Tier': 'Standard',
                 'Tags': []
             })
 
@@ -928,7 +939,8 @@ def test_ssm_provider_deploy_non_replaceable_attrs_confirm_no(
                 'Parameters': [{
                     'Name': 'ssm-param1',
                     'Description': '',
-                    'Type': 'String'
+                    'Type': 'String',
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [

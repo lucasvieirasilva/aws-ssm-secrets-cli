@@ -324,13 +324,15 @@ def _ssm_parameters_stubs(stubber):
         'Description': '',
         'Type': 'SecureString',
         'Value': 'PlainTextData',
+        'Tier': 'Standard',
         'Tags': []
     })
     stubber.add_response('describe_parameters', {
         'Parameters': [{
             'Name': 'ssm2',
             'Description': '',
-            'Type': 'String'
+            'Type': 'String',
+            'Tier': 'Standard'
         }]
     }, {
         'ParameterFilters': [
@@ -360,6 +362,7 @@ def _ssm_parameters_stubs(stubber):
         'Description': '',
         'Type': 'String',
         'Value': 'PlainText2',
+        'Tier': 'Standard',
         'Overwrite': True,
     })
     stubber.add_response('remove_tags_from_resource', {}, {
@@ -383,13 +386,15 @@ def _ssm_parameters_stubs(stubber):
         'Description': '',
         'Type': 'String',
         'Value': 'myvalue',
+        'Tier': 'Standard',
         'Tags': []
     })
     stubber.add_response('describe_parameters', {
         'Parameters': [{
             'Name': 'ssm4',
             'Description': '',
-            'Type': 'SecureString'
+            'Type': 'SecureString',
+            'Tier': 'Standard'
         }]
     }, {
         'ParameterFilters': [
@@ -419,6 +424,7 @@ def _ssm_parameters_stubs(stubber):
         'Description': '',
         'Type': 'SecureString',
         'Value': 'myvalue',
+        'Tier': 'Standard',
         'Overwrite': True
     })
     stubber.add_response('remove_tags_from_resource', {}, {

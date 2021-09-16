@@ -175,6 +175,7 @@ def test_create_default_kms(mock_decrypt):
                 'Description': description,
                 'Type': ssm_type,
                 'Value': 'PlainTextData',
+                'Tier': 'Standard',
                 'Tags': []
             })
 
@@ -216,6 +217,7 @@ def test_create_custom_kms(mock_decrypt):
                 'Description': description,
                 'Type': ssm_type,
                 'Value': 'PlainTextData',
+                'Tier': 'Standard',
                 'KeyId': KEY_ARN,
                 'Tags': []
             })
@@ -259,6 +261,7 @@ def test_update_default_kms_without_tag_changes(mock_decrypt):
                 'Description': description,
                 'Type': ssm_type,
                 'Value': 'PlainTextData',
+                'Tier': 'Standard',
                 'Overwrite': True
             })
             stubber.add_response('remove_tags_from_resource', {}, {
@@ -307,6 +310,7 @@ def test_update_custom_kms_without_tag_changes(mock_decrypt):
                 'Description': description,
                 'Type': ssm_type,
                 'Value': 'PlainTextData',
+                'Tier': 'Standard',
                 'KeyId': KEY_ARN,
                 'Overwrite': True
             })
@@ -357,6 +361,7 @@ def test_update_default_kms_with_tag_changes(mock_decrypt):
                 'Description': description,
                 'Type': ssm_type,
                 'Value': 'PlainTextData',
+                'Tier': 'Standard',
                 'Overwrite': True
             })
             stubber.add_response('remove_tags_from_resource', {}, {
@@ -492,6 +497,7 @@ def test_calculate_changes_with_changes(mock_decrypt):
             - Value changed
             - Description changed
             - Type changed
+            - Tier changed
             - Kms changed
             - Tags changed
     """
@@ -510,7 +516,8 @@ def test_calculate_changes_with_changes(mock_decrypt):
                     'Name': name,
                     'Description': f'{description} CHANGED',
                     'Type': 'String',
-                    'KeyId': KEY_ARN1
+                    'KeyId': KEY_ARN1,
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -549,6 +556,7 @@ def test_calculate_changes_with_changes(mock_decrypt):
                     'description': description,
                     'type': ssm_type,
                     'kms': KEY_ARN,
+                    'tier': 'Advanced',
                     'tags': {
                         'Test': 'New'
                     }
@@ -583,6 +591,130 @@ def test_calculate_changes_with_changes(mock_decrypt):
                     'Value': 'SecureString'
                 }, {
                     'HasChanges': True,
+                    'Key': 'Tier',
+                    'OldValue': 'Standard',
+                    'Replaceable': True,
+                    'Value': 'Advanced'
+                }, {
+                    'HasChanges': True,
+                    'Key': 'Tags',
+                    'OldValue': [{'Key': 'Test', 'Value': 'Old'}],
+                    'Replaceable': True,
+                    'Value': [{'Key': 'Test', 'Value': 'New'}],
+                }]
+            }
+
+
+@patch('aws_secrets.miscellaneous.kms.decrypt')
+def test_calculate_changes_with_tier_replaceable_false(mock_decrypt):
+    """
+        Should calculate the changes between AWS resource and local resource
+
+        Scenario:
+            - Parameter exists
+            - Value changed
+            - Description changed
+            - Type changed
+            - Tier changed and not replaceable
+            - Kms changed
+            - Tags changed
+    """
+    client = boto3.client('ssm')
+    mock_decrypt.return_value = b'PlainTextData'
+
+    with patch.object(boto3.Session, 'client') as mock_client:
+        with Stubber(client) as stubber:
+            name = 'ssm-param'
+            description = 'ssm description'
+            ssm_type = 'SecureString'
+
+            mock_client.return_value = client
+            stubber.add_response('describe_parameters', {
+                'Parameters': [{
+                    'Name': name,
+                    'Description': f'{description} CHANGED',
+                    'Type': 'String',
+                    'KeyId': KEY_ARN1,
+                    'Tier': 'Advanced'
+                }]
+            }, {
+                'ParameterFilters': [
+                    {
+                        'Key': 'Name',
+                        'Option': 'Equals',
+                        'Values': [name]
+                    }
+                ]
+            })
+            stubber.add_response('get_parameter', {
+                'Parameter': {
+                    'Value': 'AWSData'
+                }
+            }, {
+                'Name': name,
+                'WithDecryption': False
+            })
+            stubber.add_response('list_tags_for_resource', {
+                'TagList': [{
+                    'Key': 'Test',
+                    'Value': 'Old'
+                }]
+            }, {
+                'ResourceType': 'Parameter',
+                'ResourceId': name
+            })
+
+            session = boto3.Session(region_name='us-east-1')
+            entry = SSMParameterEntry(
+                session=session,
+                cipher_text='SecretData',
+                kms_arn=KEY_ARN,
+                data={
+                    'name': name,
+                    'description': description,
+                    'type': ssm_type,
+                    'kms': KEY_ARN,
+                    'tier': 'Standard',
+                    'tags': {
+                        'Test': 'New'
+                    }
+                }
+            )
+
+            assert entry.changes() == {
+                'Exists': True,
+                'ChangesList': [{
+                    'HasChanges': True,
+                    'Key': 'Value',
+                    'OldValue': 'AWSData',
+                    'Replaceable': True,
+                    'Value': 'PlainTextData'
+                }, {
+                    'HasChanges': True,
+                    'Key': 'Description',
+                    'OldValue': 'ssm description CHANGED',
+                    'Replaceable': True,
+                    'Value': 'ssm description',
+                }, {
+                    'HasChanges': True,
+                    'Key': 'KeyId',
+                    'OldValue': KEY_ARN1,
+                    'Replaceable': True,
+                    'Value': KEY_ARN
+                }, {
+                    'HasChanges': True,
+                    'Key': 'Type',
+                    'OldValue': 'String',
+                    'Replaceable': False,
+                    'Value': 'SecureString'
+                }, {
+                    'HasChanges': True,
+                    'Key': 'Tier',
+                    'OldValue': 'Advanced',
+                    'Replaceable': False,
+                    'Value': 'Standard'
+                }, {
+                    'HasChanges': True,
                     'Key': 'Tags',
                     'OldValue': [{'Key': 'Test', 'Value': 'Old'}],
                     'Replaceable': True,
@@ -601,6 +733,7 @@ def test_calculate_changes_without_changes(mock_decrypt):
             - Value not changed
             - Description not changed
             - Type not changed
+            - Tier not changed
             - Kms not changed
             - Tags not changed
     """
@@ -619,7 +752,8 @@ def test_calculate_changes_without_changes(mock_decrypt):
                     'Name': name,
                     'Description': description,
                     'Type': 'SecureString',
-                    'KeyId': KEY_ARN
+                    'KeyId': KEY_ARN,
+                    'Tier': 'Standard'
                 }]
             }, {
                 'ParameterFilters': [
@@ -668,3 +802,48 @@ def test_calculate_changes_without_changes(mock_decrypt):
                 'Exists': True,
                 'ChangesList': []
             }
+
+
+@patch('aws_secrets.miscellaneous.kms.decrypt')
+def test_create_advanced_tier(mock_decrypt):
+    """
+        Should create the SSM parameter in the AWS environment
+    """
+    client = boto3.client('ssm')
+    mock_decrypt.return_value = b'PlainTextData'
+
+    with patch.object(boto3.Session, 'client') as mock_client:
+        with Stubber(client) as stubber:
+            name = 'ssm-param'
+            description = 'ssm description'
+            ssm_type = 'SecureString'
+
+            mock_client.return_value = client
+            stubber.add_response('put_parameter', {}, {
+                'Name': name,
+                'Description': description,
+                'Type': ssm_type,
+                'Value': 'PlainTextData',
+                'Tier': 'Advanced',
+                'KeyId': KEY_ARN,
+                'Tags': []
+            })
+
+            session = boto3.Session(region_name='us-east-1')
+
+            entry = SSMParameterEntry(
+                session=session,
+                cipher_text='SecretData',
+                kms_arn=KEY_ARN,
+                data={
+                    'name': name,
+                    'description': description,
+                    'type': ssm_type,
+                    'tier': 'Advanced',
+                    'kms': KEY_ARN
+                }
+            )
+
+            entry.create()
+            assert True
+            mock_decrypt.assert_called_once_with(session, 'SecretData', KEY_ARN)

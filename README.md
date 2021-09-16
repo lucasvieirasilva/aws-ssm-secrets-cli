@@ -136,6 +136,30 @@ aws-secrets deploy -e dev.yaml --profile myaws-profile --region eu-west-1
 
 Now your parameters have been created in AWS Account.
 
+## Configuration Schema
+
+```yaml
+tags: # Global tags, applied to all the resources
+  key: 'string' # key/value pair
+kms:
+  arn: 'string' # Required, KMS ARN
+parameters: # AWS SSM Parameter Section
+  - name: 'string' # Required, Parameter Name
+    description: 'string' # Optional, Parameter Description
+    type: 'String|SecureString' # Required, Parameter Type
+    value: 'string' # Required only for Type 'String' or if it is some YAML tag (e.g. !file or !cmd)
+    tier: 'Standard|Advanced|Intelligent-Tiering' # Optional, Parameter Tier, default 'Standard'
+    tags: # Optional, Parameter Tags, it is extended with the global tags
+      key: 'string'
+secrets: # AWS Secrets Manager secrets Section
+  - name: 'string' # Required, Secret Name
+    description: 'string' # Optional, Secret Description
+    value: 'string' # Required only if it is some YAML tag (e.g. !file or !cmd)
+    tags: # Optional, Secret Tags, it is extended with the global tags
+      key: 'string'
+secrets_file: 'Path' # Optional, Secrets file path, default '<config-filename>.secrets.yaml'
+```
+
 ## Command Line Interface
 
 Command options differ depending on the command, and can be found by running:
