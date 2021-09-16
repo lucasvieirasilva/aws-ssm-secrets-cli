@@ -19,6 +19,12 @@ class SecretManagerEntry(BaseEntry):
         self.client = self.session.client('secretsmanager')
 
     def schema(self) -> dict:
+        """
+            AWS Secrets Manager Secret JSON Schema
+
+            Returns:
+                `dict` JSON Schema
+        """
         return {
             "type": "object",
             "description": "AWS Secrets Manager Entry",
@@ -31,6 +37,22 @@ class SecretManagerEntry(BaseEntry):
                 "description": {
                     "type": "string",
                     "description": "Secret Description"
+                },
+                "value": {
+                    "description": "Secret Value",
+                    "oneOf": [
+                        {"type": "string"},
+                        {"type": "object", "additionalProperties": {"type": "string"}}
+                    ]
+                },
+                "kms": {
+                    "type": "string",
+                    "description": "Secret Kms Key Id or ARN"
+                },
+                "tags": {
+                    "type": "object",
+                    "description": "Secret Tags",
+                    "additionalProperties": {"type": "string"}
                 }
             }
         }

@@ -20,6 +20,12 @@ class SSMParameterEntry(BaseEntry):
         self.client = self.session.client('ssm')
 
     def schema(self) -> dict:
+        """
+            SSM Parameter JSON Schema
+
+            Returns:
+                `dict` JSON Schema
+        """
         return {
             "type": "object",
             "description": "SSM Parameter Entry",
@@ -37,6 +43,19 @@ class SSMParameterEntry(BaseEntry):
                 "description": {
                     "type": "string",
                     "description": "SSM Parameter Description"
+                },
+                "value": {
+                    "type": "string",
+                    "description": "SSM Parameter Value"
+                },
+                "kms": {
+                    "type": "string",
+                    "description": "SSM Parameter Kms Key Id or ARN"
+                },
+                "tags": {
+                    "type": "object",
+                    "description": "SSM Parameter Tags",
+                    "additionalProperties": {"type": "string"}
                 }
             }
         }
