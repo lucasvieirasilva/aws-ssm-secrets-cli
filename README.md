@@ -1,5 +1,18 @@
 # AWS Secrets CLI
 
+## SonarCloud Status
+
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=bugs)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=code_smells)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=sqale_index)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=ncloc)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=security_rating)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=lucasvieirasilva_aws-ssm-secrets-cli&metric=alert_status)](https://sonarcloud.io/dashboard?id=lucasvieirasilva_aws-ssm-secrets-cli)
+
 ## About
 
 AWS Secrets CLI is a tool to manage [SSM Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html) (SecureString and String) using KMS to encrypt your information. This tool enables you to store your secrets information without exposing it to your git repository.
