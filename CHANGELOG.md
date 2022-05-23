@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [2.1.0] - 2022-05-23
+
 ### Added
 
 - Add `Tier` property in the SSM parameter section. [issue-27](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/27)
