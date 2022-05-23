@@ -11,7 +11,7 @@ addopts = "--cov --cov-report html:'coverage/html' --cov-report xml:'coverage/co
 
 [tool.poetry]
 name = "aws-ssm-secrets-cli"
-version = "2.0.3"
+version = "2.1.0"
 description = "AWS Secret CLI for manage SSM SecureString and SecretsManager"
 license = "MIT"
 authors = [ "Lucas Vieira <lucas.vieira94@outlook.com>" ]
@@ -36,14 +36,15 @@ classifiers = [
   click = "^7.0"
   PyYaml = "^5.1"
   jsonschema = "^3.2.0"
+  aws-encryption-sdk = "^3.0.0"
 
   [tool.poetry.dev-dependencies]
-  pytest = "6.2.4"
-  pytest-cov = "2.11.1"
-  pyfakefs = "4.4.0"
-  flake8 = "3.9.2"
-  autopep8 = "1.5.7"
-  pytest-sugar = "0.9.4"
+  pytest = "^7.1.2"
+  pytest-cov = "^3.0.0"
+  pyfakefs = "^4.5.6"
+  flake8 = "^4.0.1"
+  autopep8 = "^1.5.7"
+  pytest-sugar = "^0.9.4"
 
 [build-system]
 requires = [ "poetry-core==1.0.3" ]

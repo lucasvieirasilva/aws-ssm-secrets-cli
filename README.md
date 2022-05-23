@@ -87,6 +87,22 @@ For naming convention, you should give the environment name for the file name (e
 ```yaml
 kms:
   arn: KMS_KEY_ARN (String) #Required
+encryption_sdk: 'aws_encryption_sdk'
+parameters:
+  - name: myparametername
+    value: "MySecretValueHere"
+    type: SecureString
+secrets:
+  - name: mysecretname
+    value: "MySecretValueHere"
+```
+
+or AWS Secrets manager with object
+
+```yaml
+kms:
+  arn: KMS_KEY_ARN (String) #Required
+encryption_sdk: 'aws_encryption_sdk'
 parameters:
   - name: myparametername
     value: "MySecretValueHere"
@@ -94,8 +110,8 @@ parameters:
 secrets:
   - name: mysecretname
     value:
-      "MySecretValueHere" # or value:
-      #      prop: 'Value'
+      user: myusername
+      password: mypassword
 ```
 
 ### Encrypt
@@ -136,6 +152,45 @@ aws-secrets deploy -e dev.yaml --profile myaws-profile --region eu-west-1
 
 Now your parameters have been created in AWS Account.
 
+## Migrate KMS API to AWS Encryption SDK
+
+The AWS Encryption SDK is a client-side encryption library designed to make it easy for everyone to encrypt and decrypt data using industry standards and best practices. It enables you to focus on the core functionality of your application, rather than on how to best encrypt and decrypt your data. The AWS Encryption SDK is provided free of charge under the Apache 2.0 license.
+
+Full documentation: <https://docs.aws.amazon.com/encryption-sdk/latest/developer-guide/introduction.html>
+
+Using AWS Encryption enables AWS Secrets CLI to encrypt data with more than 4KB.
+
+### Migration process
+
+1. Decrypt all SSM parameter and Secrets manager:
+
+```shell
+aws-secrets decrypt -e dev.yaml --output dev.yaml --profile myprofile --region eu-west-1
+```
+
+2. Update YAML configuration to add the `encryption_sdk` with `aws_encryption_sdk` value.
+
+```yaml
+kms:
+  arn: KMS_KEY_ARN
+encryption_sdk: 'aws_encryption_sdk'
+parameters:
+  - name: myparametername
+    value: "MySecretValueHere"
+    type: SecureString
+secrets:
+  - name: mysecretname
+    value: "MySecretValueHere"
+```
+
+> Currently, the default value is `boto3`
+
+3. Re-encrypt the YAML configuration file
+
+```shell
+aws-secrets encrypt -e dev.yaml --profile myprofile --region eu-west-1
+```
+
 ## Configuration Schema
 
 ```yaml
@@ -143,6 +198,7 @@ tags: # Global tags, applied to all the resources
   key: 'string' # key/value pair
 kms:
   arn: 'string' # Required, KMS ARN
+encryption_sdk: 'aws_encryption_sdk' | 'boto3'
 parameters: # AWS SSM Parameter Section
   - name: 'string' # Required, Parameter Name
     description: 'string' # Optional, Parameter Description

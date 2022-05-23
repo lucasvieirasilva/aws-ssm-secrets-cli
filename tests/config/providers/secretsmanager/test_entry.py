@@ -1,10 +1,11 @@
 import json
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import boto3
+from botocore.stub import Stubber
+
 from aws_secrets.config.providers.secretsmanager.entry import SecretManagerEntry
 from aws_secrets.tags.cmd import CmdTag
-from botocore.stub import Stubber
 
 KEY_ARN = 'arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab'
 KEY_ARN1 = 'arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab1'
@@ -21,6 +22,8 @@ def test_encrypt(mock_encrypt):
     mock_encrypt.return_value = b'SecretData'
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SecretManagerEntry(
         session=session,
@@ -29,6 +32,7 @@ def test_encrypt(mock_encrypt):
             'name': 'secret1',
             'value': 'MyPlainText'
         },
+        provider=provider_mock,
         cipher_text=None
     )
 
@@ -45,6 +49,8 @@ def test_encrypt_value_dict(mock_encrypt):
     mock_encrypt.return_value = b'SecretData'
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     value = {
         'key': 'MyPlainText'
@@ -57,6 +63,7 @@ def test_encrypt_value_dict(mock_encrypt):
             'name': 'secret1',
             'value': value
         },
+        provider=provider_mock,
         cipher_text=None
     )
 
@@ -71,6 +78,8 @@ def test_encrypt_already_encrypted(mock_encrypt):
     """
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SecretManagerEntry(
         session=session,
@@ -78,6 +87,7 @@ def test_encrypt_already_encrypted(mock_encrypt):
         data={
             'name': 'secret1'
         },
+        provider=provider_mock,
         cipher_text='SecretData'
     )
 
@@ -94,6 +104,8 @@ def test_decrypt(mock_decrypt):
     mock_decrypt.return_value = b'PlainTextData'
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SecretManagerEntry(
         session=session,
@@ -101,6 +113,7 @@ def test_decrypt(mock_decrypt):
         data={
             'name': 'secret1'
         },
+        provider=provider_mock,
         cipher_text='SecretData'
     )
 
@@ -117,6 +130,8 @@ def test_decrypt_with_value_data(mock_decrypt):
     mock_decrypt.return_value = b'PlainTextData'
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SecretManagerEntry(
         session=session,
@@ -125,6 +140,7 @@ def test_decrypt_with_value_data(mock_decrypt):
             'name': 'secret1',
             'value': 'SecretData'
         },
+        provider=provider_mock,
         cipher_text=None
     )
 
@@ -140,6 +156,8 @@ def test_decrypt_with_value_data_not_str(mock_run):
 
     session = boto3.Session(region_name='us-east-1')
     mock_run.return_value.stdout = 'myvalue'
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SecretManagerEntry(
         session=session,
@@ -148,6 +166,7 @@ def test_decrypt_with_value_data_not_str(mock_run):
             'name': 'secret1',
             'value': CmdTag('value')
         },
+        provider=provider_mock,
         cipher_text=None
     )
 
@@ -176,6 +195,8 @@ def test_create_default_kms(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SecretManagerEntry(
                 session=session,
@@ -184,7 +205,8 @@ def test_create_default_kms(mock_decrypt):
                 data={
                     'name': name,
                     'description': description
-                }
+                },
+                provider=provider_mock
             )
 
             entry.create()
@@ -215,6 +237,8 @@ def test_create_custom_kms(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SecretManagerEntry(
                 session=session,
@@ -224,7 +248,8 @@ def test_create_custom_kms(mock_decrypt):
                     'name': name,
                     'description': description,
                     'kms': KEY_ARN
-                }
+                },
+                provider=provider_mock
             )
 
             entry.create()
@@ -257,6 +282,8 @@ def test_update_default_kms_without_tag_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SecretManagerEntry(
                 session=session,
@@ -265,7 +292,8 @@ def test_update_default_kms_without_tag_changes(mock_decrypt):
                 data={
                     'name': name,
                     'description': description
-                }
+                },
+                provider=provider_mock
             )
 
             entry.update({
@@ -301,6 +329,8 @@ def test_update_custom_kms_without_tag_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SecretManagerEntry(
                 session=session,
@@ -310,7 +340,8 @@ def test_update_custom_kms_without_tag_changes(mock_decrypt):
                     'name': name,
                     'description': description,
                     'kms': KEY_ARN
-                }
+                },
+                provider=provider_mock
             )
 
             entry.update({
@@ -352,6 +383,8 @@ def test_update_default_kms_with_tag_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SecretManagerEntry(
                 session=session,
@@ -363,7 +396,8 @@ def test_update_default_kms_with_tag_changes(mock_decrypt):
                     'tags': {
                         'Test': 'New'
                     }
-                }
+                },
+                provider=provider_mock
             )
 
             entry.update({
@@ -397,6 +431,8 @@ def test_delete():
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SecretManagerEntry(
                 session=session,
@@ -405,7 +441,8 @@ def test_delete():
                 data={
                     'name': name,
                     'description': description
-                }
+                },
+                provider=provider_mock
             )
 
             entry.delete()
@@ -439,6 +476,9 @@ def test_calculate_changes_with_parameter_not_exists():
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
+
             entry = SecretManagerEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -446,7 +486,8 @@ def test_calculate_changes_with_parameter_not_exists():
                 data={
                     'name': name,
                     'description': description,
-                }
+                },
+                provider=provider_mock
             )
 
             assert entry.changes() == {
@@ -502,6 +543,9 @@ def test_calculate_changes_with_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
+
             entry = SecretManagerEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -513,7 +557,8 @@ def test_calculate_changes_with_changes(mock_decrypt):
                     'tags': {
                         'Test': 'New'
                     }
-                }
+                },
+                provider=provider_mock
             )
 
             assert entry.changes() == {
@@ -594,6 +639,8 @@ def test_calculate_changes_without_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
             entry = SecretManagerEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -605,10 +652,64 @@ def test_calculate_changes_without_changes(mock_decrypt):
                     'tags': {
                         'Test': 'New'
                     }
-                }
+                },
+                provider=provider_mock
             )
 
             assert entry.changes() == {
                 'Exists': True,
                 'ChangesList': []
             }
+
+
+@patch('aws_secrets.miscellaneous.crypto.encrypt')
+def test_encrypt_aws_encryption_sdk(mock_encrypt):
+    """
+        Should encrypt the raw value using AWS encryption SDK
+    """
+
+    mock_encrypt.return_value = 'SecretData'
+
+    session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'aws_encryption_sdk'
+
+    entry = SecretManagerEntry(
+        session=session,
+        kms_arn=KEY_ARN,
+        data={
+            'name': 'secret1',
+            'value': 'MyPlainText'
+        },
+        provider=provider_mock,
+        cipher_text=None
+    )
+
+    assert entry.encrypt() == 'SecretData'
+    mock_encrypt.assert_called_once_with(session, 'MyPlainText', KEY_ARN)
+
+
+@patch('aws_secrets.miscellaneous.crypto.decrypt')
+def test_decrypt_aws_encryption_sdk(mock_decrypt):
+    """
+        Should decrypt the cipher text using AWS Encryption SDK
+    """
+
+    mock_decrypt.return_value = 'PlainTextData'
+
+    session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'aws_encryption_sdk'
+
+    entry = SecretManagerEntry(
+        session=session,
+        kms_arn=KEY_ARN,
+        data={
+            'name': 'secret1'
+        },
+        provider=provider_mock,
+        cipher_text='SecretData'
+    )
+
+    assert entry.decrypt() == 'PlainTextData'
+    mock_decrypt.assert_called_once_with(session, 'SecretData', KEY_ARN)

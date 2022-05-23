@@ -1,9 +1,10 @@
 import json
 from typing import Any, Dict, Optional
 
-from aws_secrets.config.providers import BaseEntry
-from aws_secrets.miscellaneous import kms
 from botocore.session import Session
+
+from aws_secrets.config.providers import BaseEntry, BaseProvider
+from aws_secrets.miscellaneous import crypto, kms
 
 
 class SecretManagerEntry(BaseEntry):
@@ -12,9 +13,10 @@ class SecretManagerEntry(BaseEntry):
         session: Session,
         kms_arn: str,
         data: Dict[str, Any],
+        provider: BaseProvider,
         cipher_text: str = None
     ) -> None:
-        super(SecretManagerEntry, self).__init__(session, kms_arn, data, cipher_text)
+        super(SecretManagerEntry, self).__init__(session, kms_arn, data, provider, cipher_text)
 
         self.client = self.session.client('secretsmanager')
 
@@ -63,7 +65,10 @@ class SecretManagerEntry(BaseEntry):
                 self.raw_value = json.dumps(self.raw_value)
 
             self.logger.warning(f'Secret - {self.name} - Encrypting...')
-            self.cipher_text = kms.encrypt(self.session, self.raw_value, self.kms_arn).decode('utf-8')
+            if self.provider.encryption_sdk == 'boto3':
+                self.cipher_text = kms.encrypt(self.session, self.raw_value, self.kms_arn).decode('utf-8')
+            else:
+                self.cipher_text = crypto.encrypt(self.session, self.raw_value, self.kms_arn)
             self.logger.debug(f'Secret - {self.name} - Encrypted')
             return self.cipher_text
 
@@ -73,7 +78,10 @@ class SecretManagerEntry(BaseEntry):
     def decrypt(self) -> str:
         def _do_decrypt(value):
             self.logger.debug(f'Secret - {self.name} - Decrypting entry')
-            return kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
+            if self.provider.encryption_sdk == 'boto3':
+                return kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
+            else:
+                return crypto.decrypt(self.session, value, self.kms_arn)
 
         if self.cipher_text:
             return _do_decrypt(self.cipher_text)

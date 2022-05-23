@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import boto3
 import pytest
@@ -20,6 +20,8 @@ def test_encrypt_secure_string(mock_encrypt):
     mock_encrypt.return_value = b'SecretData'
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SSMParameterEntry(
         session=session,
@@ -29,7 +31,8 @@ def test_encrypt_secure_string(mock_encrypt):
             'type': 'SecureString',
             'value': 'MyPlainText'
         },
-        cipher_text=None
+        cipher_text=None,
+        provider=provider_mock
     )
 
     assert entry.encrypt() == 'SecretData'
@@ -43,6 +46,8 @@ def test_encrypt_secure_string_already_encrypted(mock_encrypt):
     """
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SSMParameterEntry(
         session=session,
@@ -51,7 +56,8 @@ def test_encrypt_secure_string_already_encrypted(mock_encrypt):
             'name': 'ssm-param',
             'type': 'SecureString'
         },
-        cipher_text='SecretData'
+        cipher_text='SecretData',
+        provider=provider_mock
     )
 
     assert entry.encrypt() == 'SecretData'
@@ -65,6 +71,8 @@ def test_encrypt_invalid_type(mock_encrypt):
     """
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     with pytest.raises(CLIError) as error:
         SSMParameterEntry(
@@ -74,7 +82,8 @@ def test_encrypt_invalid_type(mock_encrypt):
                 'name': 'ssm-param',
                 'type': 'Invalid'
             },
-            cipher_text='SecretData'
+            cipher_text='SecretData',
+            provider=provider_mock
         )
 
         assert "'Invalid' is not one of ['String', 'SecureString']" in str(error.value)
@@ -90,6 +99,8 @@ def test_decrypt_secure_string(mock_decrypt):
     mock_decrypt.return_value = b'PlainTextData'
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SSMParameterEntry(
         session=session,
@@ -98,7 +109,8 @@ def test_decrypt_secure_string(mock_decrypt):
             'name': 'ssm-param',
             'type': 'SecureString'
         },
-        cipher_text='SecretData'
+        cipher_text='SecretData',
+        provider=provider_mock
     )
 
     assert entry.decrypt() == 'PlainTextData'
@@ -114,6 +126,8 @@ def test_decrypt_secure_string_with_value_data(mock_decrypt):
     mock_decrypt.return_value = b'PlainTextData'
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SSMParameterEntry(
         session=session,
@@ -123,7 +137,8 @@ def test_decrypt_secure_string_with_value_data(mock_decrypt):
             'type': 'SecureString',
             'value': 'SecretData'
         },
-        cipher_text=None
+        cipher_text=None,
+        provider=provider_mock
     )
 
     assert entry.decrypt() == 'PlainTextData'
@@ -139,6 +154,8 @@ def test_decrypt_string_type(mock_decrypt):
     mock_decrypt.return_value = b'PlainTextData'
 
     session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'boto3'
 
     entry = SSMParameterEntry(
         session=session,
@@ -148,7 +165,8 @@ def test_decrypt_string_type(mock_decrypt):
             'type': 'String',
             'value': 'PlainTextData'
         },
-        cipher_text=None
+        cipher_text=None,
+        provider=provider_mock
     )
 
     assert entry.decrypt() == 'PlainTextData'
@@ -180,6 +198,8 @@ def test_create_default_kms(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SSMParameterEntry(
                 session=session,
@@ -189,7 +209,8 @@ def test_create_default_kms(mock_decrypt):
                     'name': name,
                     'description': description,
                     'type': ssm_type
-                }
+                },
+                provider=provider_mock
             )
 
             entry.create()
@@ -223,6 +244,8 @@ def test_create_custom_kms(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SSMParameterEntry(
                 session=session,
@@ -233,7 +256,8 @@ def test_create_custom_kms(mock_decrypt):
                     'description': description,
                     'type': ssm_type,
                     'kms': KEY_ARN
-                }
+                },
+                provider=provider_mock
             )
 
             entry.create()
@@ -271,6 +295,8 @@ def test_update_default_kms_without_tag_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SSMParameterEntry(
                 session=session,
@@ -280,7 +306,8 @@ def test_update_default_kms_without_tag_changes(mock_decrypt):
                     'name': name,
                     'description': description,
                     'type': ssm_type
-                }
+                },
+                provider=provider_mock
             )
 
             entry.update({
@@ -321,6 +348,8 @@ def test_update_custom_kms_without_tag_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SSMParameterEntry(
                 session=session,
@@ -331,7 +360,8 @@ def test_update_custom_kms_without_tag_changes(mock_decrypt):
                     'description': description,
                     'type': ssm_type,
                     'kms': KEY_ARN
-                }
+                },
+                provider=provider_mock
             )
 
             entry.update({
@@ -379,6 +409,8 @@ def test_update_default_kms_with_tag_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SSMParameterEntry(
                 session=session,
@@ -391,7 +423,8 @@ def test_update_default_kms_with_tag_changes(mock_decrypt):
                     'tags': {
                         'Test': 'New'
                     }
-                }
+                },
+                provider=provider_mock
             )
 
             entry.update({
@@ -425,6 +458,8 @@ def test_delete():
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SSMParameterEntry(
                 session=session,
@@ -434,7 +469,8 @@ def test_delete():
                     'name': name,
                     'description': description,
                     'type': ssm_type
-                }
+                },
+                provider=provider_mock
             )
 
             entry.delete()
@@ -470,6 +506,8 @@ def test_calculate_changes_with_parameter_not_exists():
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
             entry = SSMParameterEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -478,7 +516,8 @@ def test_calculate_changes_with_parameter_not_exists():
                     'name': name,
                     'description': description,
                     'type': ssm_type
-                }
+                },
+                provider=provider_mock
             )
 
             assert entry.changes() == {
@@ -547,6 +586,8 @@ def test_calculate_changes_with_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
             entry = SSMParameterEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -560,7 +601,8 @@ def test_calculate_changes_with_changes(mock_decrypt):
                     'tags': {
                         'Test': 'New'
                     }
-                }
+                },
+                provider=provider_mock
             )
 
             assert entry.changes() == {
@@ -665,6 +707,8 @@ def test_calculate_changes_with_tier_replaceable_false(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
             entry = SSMParameterEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -678,7 +722,8 @@ def test_calculate_changes_with_tier_replaceable_false(mock_decrypt):
                     'tags': {
                         'Test': 'New'
                     }
-                }
+                },
+                provider=provider_mock
             )
 
             assert entry.changes() == {
@@ -783,6 +828,9 @@ def test_calculate_changes_without_changes(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
+
             entry = SSMParameterEntry(
                 session=session,
                 cipher_text='SecretData',
@@ -795,7 +843,8 @@ def test_calculate_changes_without_changes(mock_decrypt):
                     'tags': {
                         'Test': 'New'
                     }
-                }
+                },
+                provider=provider_mock
             )
 
             assert entry.changes() == {
@@ -830,6 +879,8 @@ def test_create_advanced_tier(mock_decrypt):
             })
 
             session = boto3.Session(region_name='us-east-1')
+            provider_mock = MagicMock()
+            provider_mock.encryption_sdk = 'boto3'
 
             entry = SSMParameterEntry(
                 session=session,
@@ -841,9 +892,65 @@ def test_create_advanced_tier(mock_decrypt):
                     'type': ssm_type,
                     'tier': 'Advanced',
                     'kms': KEY_ARN
-                }
+                },
+                provider=provider_mock
             )
 
             entry.create()
             assert True
             mock_decrypt.assert_called_once_with(session, 'SecretData', KEY_ARN)
+
+
+@patch('aws_secrets.miscellaneous.crypto.encrypt')
+def test_encrypt_secure_string_aws_encryption_sdk(mock_encrypt):
+    """
+        Should encrypt the raw value using AWS Encryption SDK
+    """
+
+    mock_encrypt.return_value = 'SecretData'
+
+    session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'aws_encryption_sdk'
+
+    entry = SSMParameterEntry(
+        session=session,
+        kms_arn=KEY_ARN,
+        data={
+            'name': 'ssm-param',
+            'type': 'SecureString',
+            'value': 'MyPlainText'
+        },
+        cipher_text=None,
+        provider=provider_mock
+    )
+
+    assert entry.encrypt() == 'SecretData'
+    mock_encrypt.assert_called_once_with(session, 'MyPlainText', KEY_ARN)
+
+
+@patch('aws_secrets.miscellaneous.crypto.decrypt')
+def test_decrypt_secure_string_aws_encryption_sdk(mock_decrypt):
+    """
+        Should decrypt the cipher text using AWS encryption SDK
+    """
+
+    mock_decrypt.return_value = 'PlainTextData'
+
+    session = boto3.Session(region_name='us-east-1')
+    provider_mock = MagicMock()
+    provider_mock.encryption_sdk = 'aws_encryption_sdk'
+
+    entry = SSMParameterEntry(
+        session=session,
+        kms_arn=KEY_ARN,
+        data={
+            'name': 'ssm-param',
+            'type': 'SecureString'
+        },
+        cipher_text='SecretData',
+        provider=provider_mock
+    )
+
+    assert entry.decrypt() == 'PlainTextData'
+    mock_decrypt.assert_called_once_with(session, 'SecretData', KEY_ARN)

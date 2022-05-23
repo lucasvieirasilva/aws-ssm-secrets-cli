@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, Optional
 
 import click
+
 from aws_secrets.config.providers import BaseProvider
 from aws_secrets.config.providers.ssm.entry import SSMParameterEntry
 from aws_secrets.representers.literal import Literal
@@ -50,6 +51,7 @@ class SSMProvider(BaseProvider):
                     session=self.session,
                     kms_arn=self.kms_arn,
                     data=param,
+                    provider=self,
                     cipher_text=secret_data.get('value', None)
                 )
             )
@@ -97,6 +99,7 @@ class SSMProvider(BaseProvider):
         entry = SSMParameterEntry(
             session=self.session,
             kms_arn=self.kms_arn,
+            provider=self,
             data=data
         )
         self.entries.append(entry)
@@ -119,6 +122,7 @@ class SSMProvider(BaseProvider):
                 self.entries[idx] = SSMParameterEntry(
                     session=self.session,
                     kms_arn=self.kms_arn,
+                    provider=self,
                     data=data
                 )
 
