@@ -192,64 +192,18 @@ class SSMParameterEntry(BaseEntry):
             aws_param_value = self._get_aws_value(aws_param['Type'])
             yaml_param_value = str(self.decrypt())
 
-            if aws_param_value != yaml_param_value:
-                changes['ChangesList'].append(
-                    {
-                        'Key': 'Value',
-                        'HasChanges': True,
-                        'Replaceable': True,
-                        'Value': yaml_param_value,
-                        'OldValue': aws_param_value
-                    }
-                )
+            self._check_value_changeset(changes, aws_param_value, yaml_param_value)
 
             yaml_secret_description = self.description
             aws_secret_description = aws_param.get('Description', '')
 
-            if aws_secret_description != yaml_secret_description:
-                changes['ChangesList'].append(
-                    {
-                        'Key': 'Description',
-                        'HasChanges': True,
-                        'Replaceable': True,
-                        'Value': yaml_secret_description,
-                        'OldValue': aws_secret_description
-                    }
-                )
+            self._check_description_changeset(changes, aws_secret_description, yaml_secret_description)
 
-            if self.kms is not None and self.kms != aws_param['KeyId']:
-                changes['ChangesList'].append(
-                    {
-                        'Key': 'KeyId',
-                        'HasChanges': True,
-                        'Replaceable': True,
-                        'Value': self.kms,
-                        'OldValue': aws_param['KeyId']
-                    }
-                )
+            self._check_kmskey_changeset(changes, aws_param)
 
-            if self.type != aws_param['Type']:
-                changes['ChangesList'].append(
-                    {
-                        'Key': 'Type',
-                        'HasChanges': True,
-                        'Replaceable': False,
-                        'Value': self.type,
-                        'OldValue': aws_param['Type']
-                    }
-                )
+            self._check_type_changeset(changes, aws_param)
 
-            if self.tier != aws_param['Tier']:
-                changes['ChangesList'].append(
-                    {
-                        'Key': 'Tier',
-                        'HasChanges': True,
-                        'Replaceable': aws_param['Tier'] == 'Standard' and
-                        (self.tier == 'Advanced' or self.tier == 'Intelligent-Tiering'),
-                        'Value': self.tier,
-                        'OldValue': aws_param['Tier']
-                    }
-                )
+            self._check_tier_changeset(changes, aws_param)
 
             self.logger.debug(f'Parameter - {self.name} - Listing Tags for the AWS resource')
             aws_tags = self.client.list_tags_for_resource(
@@ -274,6 +228,126 @@ class SSMParameterEntry(BaseEntry):
                 )
 
         return changes
+
+    def _check_tier_changeset(
+        self,
+        changes: dict,
+        aws_param: dict
+    ):
+        """
+        Check if the SSM Parameter entry tier has changed.
+
+        Args:
+            changes (`dict`): changes object
+            aws_param (`dict`): AWS SSM Parameter current definition
+        """
+        if self.tier != aws_param['Tier']:
+            changes['ChangesList'].append(
+                {
+                    'Key': 'Tier',
+                    'HasChanges': True,
+                    'Replaceable': aws_param['Tier'] == 'Standard' and
+                    (self.tier == 'Advanced' or self.tier == 'Intelligent-Tiering'),
+                    'Value': self.tier,
+                    'OldValue': aws_param['Tier']
+                }
+            )
+
+    def _check_type_changeset(
+        self,
+        changes: dict,
+        aws_param: dict
+    ) -> None:
+        """
+        Check if the SSM Parameter entry type has changed.
+
+        Args:
+            changes (`dict`): changes object
+            aws_param (`dict`): AWS SSM Parameter current definition
+        """
+        if self.type != aws_param['Type']:
+            changes['ChangesList'].append(
+                {
+                    'Key': 'Type',
+                    'HasChanges': True,
+                    'Replaceable': False,
+                    'Value': self.type,
+                    'OldValue': aws_param['Type']
+                }
+            )
+
+    def _check_kmskey_changeset(
+        self,
+        changes: dict,
+        aws_param: dict
+    ) -> None:
+        """
+        Check if the SSM Parameter entry KMS Key ID has changed.
+
+        Args:
+            changes (`dict`): changes object
+            aws_param (`dict`): AWS SSM Parameter current definition
+        """
+        if self.kms is not None and self.kms != aws_param['KeyId']:
+            changes['ChangesList'].append(
+                {
+                    'Key': 'KeyId',
+                    'HasChanges': True,
+                    'Replaceable': True,
+                    'Value': self.kms,
+                    'OldValue': aws_param['KeyId']
+                }
+            )
+
+    def _check_description_changeset(
+        self,
+        changes: dict,
+        aws_secret_description: str,
+        yaml_secret_description: str
+    ) -> None:
+        """
+        Check if the SSM Parameter entry description has changed.
+
+        Args:
+            changes (`dict`): changes object
+            aws_secret_description (`str`): AWS SSM Parameter current description
+            yaml_secret_description (`str`): Local SSM parameter description
+        """
+        if aws_secret_description != yaml_secret_description:
+            changes['ChangesList'].append(
+                {
+                    'Key': 'Description',
+                    'HasChanges': True,
+                    'Replaceable': True,
+                    'Value': yaml_secret_description,
+                    'OldValue': aws_secret_description
+                }
+            )
+
+    def _check_value_changeset(
+        self,
+        changes: dict,
+        aws_param_value: str,
+        yaml_param_value: str
+    ) -> None:
+        """
+        Check if the SSM Parameter entry value has changed.
+
+        Args:
+            changes (`dict`): changes object
+            aws_param_value (`str`): AWS SSM Parameter current value
+            yaml_param_value (`str`): Local SSM parameter value
+        """
+        if aws_param_value != yaml_param_value:
+            changes['ChangesList'].append(
+                {
+                    'Key': 'Value',
+                    'HasChanges': True,
+                    'Replaceable': True,
+                    'Value': yaml_param_value,
+                    'OldValue': aws_param_value
+                }
+            )
 
     def _get_aws_value(self, type: str) -> str:
         param_response = self.client.get_parameter(

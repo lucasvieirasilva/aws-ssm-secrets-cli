@@ -106,8 +106,8 @@ class BaseEntry:
 
         try:
             type_checker = Draft3Validator.TYPE_CHECKER.redefine('string', is_string_or_yaml_tag_type)
-            CustomValidator = extend(Draft3Validator, type_checker=type_checker)
-            validator = CustomValidator(schema=self.schema())
+            custom_validator = extend(Draft3Validator, type_checker=type_checker)
+            validator = custom_validator(schema=self.schema())
             validator.validate(instance=self._data)
         except ValidationError as error:
             raise CLIError(f"Entry '{self.name}' is not valid, error: {str(error)}")
