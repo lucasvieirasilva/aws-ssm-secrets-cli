@@ -7,7 +7,7 @@ import click
 import six
 from botocore.session import Session
 from jsonschema.exceptions import ValidationError
-from jsonschema.validators import extend, Draft3Validator
+from jsonschema.validators import Draft3Validator, extend
 
 from aws_secrets.helpers.catch_exceptions import CLIError
 from aws_secrets.miscellaneous import utils
@@ -47,7 +47,8 @@ class BaseEntry:
         session: Session,
         kms_arn: str,
         data: Dict[str, Any],
-        cipher_text: str = None
+        provider: "BaseProvider",
+        cipher_text: str = None,
     ) -> None:
         """
             Base class constructor
@@ -71,6 +72,7 @@ class BaseEntry:
 
         self.raw_value = data.get('value', None)
         self.cipher_text = cipher_text
+        self.provider = provider
 
         self.validate_schema()
 
@@ -209,6 +211,7 @@ class BaseProvider:
         self.kms_arn = config.kms_arn
         self.config_data = config.data
         self.secrets_data = config.secrets_data
+        self.encryption_sdk = config.encryption_sdk
         self.entries = self.load_entries()
 
     def filter(self, filter_pattern: Optional[str]) -> List[BaseEntry]:

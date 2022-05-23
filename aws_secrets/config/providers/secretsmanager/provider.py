@@ -2,9 +2,9 @@ import json
 from typing import Any, Dict, List, Optional
 
 import click
+
 from aws_secrets.config.providers import BaseProvider
-from aws_secrets.config.providers.secretsmanager.entry import \
-    SecretManagerEntry
+from aws_secrets.config.providers.secretsmanager.entry import SecretManagerEntry
 
 
 class SecretsManagerProvider(BaseProvider):
@@ -51,7 +51,8 @@ class SecretsManagerProvider(BaseProvider):
                     session=self.session,
                     kms_arn=self.kms_arn,
                     data=param,
-                    cipher_text=secret_data.get('value', None)
+                    provider=self,
+                    cipher_text=secret_data.get('value', None),
                 )
             )
 
@@ -100,6 +101,7 @@ class SecretsManagerProvider(BaseProvider):
         entry = SecretManagerEntry(
             session=self.session,
             kms_arn=self.kms_arn,
+            provider=self,
             data=data
         )
         self.entries.append(entry)
@@ -123,6 +125,7 @@ class SecretsManagerProvider(BaseProvider):
                 self.entries[idx] = SecretManagerEntry(
                     session=self.session,
                     kms_arn=self.kms_arn,
+                    provider=self,
                     data=data
                 )
 

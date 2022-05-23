@@ -2,8 +2,8 @@ from typing import Any, Dict, List, Optional
 
 from botocore.session import Session
 
-from aws_secrets.config.providers import BaseEntry
-from aws_secrets.miscellaneous import kms
+from aws_secrets.config.providers import BaseEntry, BaseProvider
+from aws_secrets.miscellaneous import crypto, kms
 
 
 class SSMParameterEntry(BaseEntry):
@@ -12,9 +12,10 @@ class SSMParameterEntry(BaseEntry):
         session: Session,
         kms_arn: str,
         data: Dict[str, Any],
+        provider: BaseProvider,
         cipher_text: str = None
     ) -> None:
-        super(SSMParameterEntry, self).__init__(session, kms_arn, data, cipher_text)
+        super(SSMParameterEntry, self).__init__(session, kms_arn, data, provider, cipher_text)
 
         self.type = data['type']
         self.tier = data.get('tier', 'Standard')
@@ -69,7 +70,10 @@ class SSMParameterEntry(BaseEntry):
     def encrypt(self) -> Optional[str]:
         if self.type == 'SecureString' and self.raw_value and isinstance(self.raw_value, str):
             self.logger.warning(f'Parameter - {self.name} - Encrypting...')
-            self.cipher_text = kms.encrypt(self.session, self.raw_value, self.kms_arn).decode('utf-8')
+            if self.provider.encryption_sdk == 'boto3':
+                self.cipher_text = kms.encrypt(self.session, self.raw_value, self.kms_arn).decode('utf-8')
+            else:
+                self.cipher_text = crypto.encrypt(self.session, self.raw_value, self.kms_arn)
             self.logger.debug(f'Parameter - {self.name} - Encrypted')
             return self.cipher_text
         elif self.type == 'SecureString':
@@ -81,7 +85,10 @@ class SSMParameterEntry(BaseEntry):
     def decrypt(self) -> str:
         def _do_decrypt(value):
             self.logger.debug(f'Parameter - {self.name} - Decrypting entry')
-            return kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
+            if self.provider.encryption_sdk == 'boto3':
+                return kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
+            else:
+                return crypto.decrypt(self.session, value, self.kms_arn)
 
         if self.type == 'SecureString' and self.cipher_text:
             return _do_decrypt(self.cipher_text)
