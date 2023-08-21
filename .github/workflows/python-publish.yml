@@ -6,7 +6,7 @@ name: Python package
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - "v*.*.*"
 
 jobs:
   deploy:
@@ -18,4 +18,4 @@ jobs:
         uses: JRubics/poetry-publish@v1.8
         with:
           pypi_token: ${{ secrets.PYPI_TOKEN }}
-          poetry_version: '==1.5.1'
+          poetry_version: "==1.5.1"
