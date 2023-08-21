@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Nonfunctional
 
+- Update Poetry to version `1.5.1`. [issue-52](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/52)
+
+### Nonfunctional
+
 - Fix SonarCloud Code Smells.
 
 ## [2.1.0] - 2022-05-23
