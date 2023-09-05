@@ -9,6 +9,11 @@ on:
   pull_request:
     branches: [master]
 
+permissions:
+  pull-requests: read
+  issues: read
+  contents: read
+
 jobs:
   tests:
     runs-on: ubuntu-latest
@@ -39,10 +44,8 @@ jobs:
         run: |
           poetry run pytest tests/
 
-      - name: Coverage Report
-        uses: 5monkeys/cobertura-action@master
-        with:
-          path: coverage/coverage.xml
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          minimum_coverage: 100
-          fail_below_threshold: true
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
