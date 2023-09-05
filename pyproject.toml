@@ -38,13 +38,14 @@ PyYaml = "^6.0.1"
 jsonschema = "^3.2.0"
 aws-encryption-sdk = "^3.0.0"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 pytest = "^7.4.1"
 pytest-cov = "^4.1.0"
 pyfakefs = "^5.2.4"
 flake8 = "^6.1.0"
 autopep8 = "^2.0.4"
 pytest-sugar = "^0.9.7"
+toml = "^0.10.2"
 
 [build-system]
 requires = ["poetry-core==1.6.1"]
