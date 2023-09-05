@@ -41,7 +41,7 @@ class ConfigReader(object):
 
         self.session = session.session()
         self.kms_arn = self.get_kms_arn()
-        self.encryption_sdk = self.data.get('encryption_sdk', 'boto3')
+        self.encryption_sdk = self.data.get('encryption_sdk', 'boto3')  # default to boto3
 
         self.providers = self.load_providers()
 
