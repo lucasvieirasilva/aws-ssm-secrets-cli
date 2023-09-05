@@ -1,6 +1,7 @@
 import yaml
 from yaml.dumper import SafeDumper
 from yaml.nodes import ScalarNode
+
 from aws_secrets.helpers.catch_exceptions import CLIError
 from aws_secrets.miscellaneous import cloudformation
 from aws_secrets.miscellaneous.session import session
@@ -13,6 +14,7 @@ class OutputStackTag(yaml.YAMLObject):
 
         Examples:
             >>> !cf_output <stack>.<output-name>
+            >>> !cf_output <stack>.<output-name>.<aws-region>
             value: <stack-output-value>
 
         Args:
@@ -34,13 +36,22 @@ class OutputStackTag(yaml.YAMLObject):
                 `str`: stack output value
         """
         stack_args = self.stack.split('.')
-        if len(stack_args) != 2:
+        if len(stack_args) < 2 or len(stack_args) > 3:
             raise CLIError(
-                f'value {self.stack} is invalid, the correct way to ' +
-                'fill this information is <stack-name>.<output-name>')
-
+                (
+                    f'value {self.stack} is invalid, the correct way to '
+                    'fill this information is <stack-name>.<output-name> '
+                    'or <stack-name>.<output-name>.<aws_region>'
+                )
+            )
+        region = None
         stack_name = stack_args[0]
         output_name = stack_args[1]
+        try:
+            region = stack_args[2]
+            session.aws_region = region
+        except IndexError:
+            pass
 
         return cloudformation.get_output_value(session(), stack_name, output_name)
 

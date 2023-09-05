@@ -1,5 +1,6 @@
-from aws_secrets.helpers.catch_exceptions import CLIError
 from botocore.session import Session
+
+from aws_secrets.helpers.catch_exceptions import CLIError
 
 
 def get_output_value(
