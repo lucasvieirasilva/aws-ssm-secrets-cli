@@ -7,7 +7,7 @@ exclude_lines = []
 show_missing = true
 
 [tool.pytest.ini_options]
-addopts = "--cov --cov-report html:'.coverage-reports/html' --cov-report xml:'.coverage-reports/coverage.xml'"
+addopts = "--cov --cov-report html:'coverage/html' --cov-report xml:'coverage/coverage.xml'"
 
 [tool.poetry]
 name = "aws-ssm-secrets-cli"
