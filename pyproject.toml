@@ -1,6 +1,7 @@
 [tool.coverage.run]
 branch = true
 source = ["aws_secrets"]
+relative_files = true
 
 [tool.coverage.report]
 exclude_lines = []
