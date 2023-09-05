@@ -100,7 +100,7 @@ For naming convention, you should give the environment name for the file name (e
 ```yaml
 kms:
   arn: KMS_KEY_ARN (String) #Required
-encryption_sdk: 'aws_encryption_sdk'
+encryption_sdk: "aws_encryption_sdk"
 parameters:
   - name: myparametername
     value: "MySecretValueHere"
@@ -115,7 +115,7 @@ or AWS Secrets manager with object
 ```yaml
 kms:
   arn: KMS_KEY_ARN (String) #Required
-encryption_sdk: 'aws_encryption_sdk'
+encryption_sdk: "aws_encryption_sdk"
 parameters:
   - name: myparametername
     value: "MySecretValueHere"
@@ -186,7 +186,7 @@ aws-secrets decrypt -e dev.yaml --output dev.yaml --profile myprofile --region e
 ```yaml
 kms:
   arn: KMS_KEY_ARN
-encryption_sdk: 'aws_encryption_sdk'
+encryption_sdk: "aws_encryption_sdk"
 parameters:
   - name: myparametername
     value: "MySecretValueHere"
@@ -389,11 +389,11 @@ This resolver is designed to load a file content to the SSM Parameter or Secrets
 Example:
 
 ```yaml
-...
+
+---
 secrets:
   - name: mysecret
     value: !file myfile.txt
-...
 ```
 
 ##### !cf_output
@@ -409,6 +409,15 @@ parameters:
   - name: myparameter-name
     type: String
     value: !cf_output "mystack.MyOutputKey"
+```
+
+```yaml
+kms:
+  arn: !cf_output "mystack.MyOutputKey.us-east-1"
+parameters:
+  - name: myparameter-name
+    type: String
+    value: !cf_output "mystack.MyOutputKey.us-east-1"
 ```
 
 ##### !cmd
