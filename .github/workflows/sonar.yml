@@ -1,8 +1,10 @@
 name: Sonar
+
 on:
   workflow_run:
-    workflows: [Unit Tests]
+    workflows: [UnitTests]
     types: [completed]
+
 jobs:
   sonar:
     name: Sonar
