@@ -12,7 +12,7 @@ addopts = "--cov --cov-report html:'coverage/html' --cov-report xml:'coverage/co
 
 [tool.poetry]
 name = "aws-ssm-secrets-cli"
-version = "2.2.0"
+version = "2.3.0"
 description = "AWS Secret CLI for manage SSM SecureString and SecretsManager"
 license = "MIT"
 authors = ["Lucas Vieira <lucas.vieira94@outlook.com>"]

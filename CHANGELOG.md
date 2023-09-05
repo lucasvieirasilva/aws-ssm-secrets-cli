@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [2.3.0] - 2023-09-05
+
 ### Changed
 
 - Update yaml tag `tags.output_stack.OutputStackTag` to work with custom aws region. [issue-54](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/issues/54)
