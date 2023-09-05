@@ -44,8 +44,8 @@ jobs:
         run: |
           poetry run pytest tests/
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      - name: Upload code coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: code-coverage
+          path: coverage/coverage.xml
