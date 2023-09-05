@@ -43,6 +43,7 @@ jobs:
           AWS_REGION: us-east-1
         run: |
           poetry run pytest tests/
+          ls -la coverage
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@master
