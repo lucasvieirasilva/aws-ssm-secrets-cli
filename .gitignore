@@ -4,6 +4,7 @@ dist
 
 reports/
 coverage/
+coverage-reports/
 
 .coverage
 venv
