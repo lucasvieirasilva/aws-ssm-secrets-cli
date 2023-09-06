@@ -34,7 +34,7 @@ aws-secrets = "aws_secrets.cli.cli:cli"
 [tool.poetry.dependencies]
 python = ">=3.8.1,<4.0"
 boto3 = "^1.3"
-click = "^7.0"
+click = "^8.1.7"
 PyYaml = "^6.0.1"
 jsonschema = "^3.2.0"
 aws-encryption-sdk = "^3.0.0"
@@ -47,7 +47,22 @@ flake8 = "^6.1.0"
 autopep8 = "^2.0.4"
 pytest-sugar = "^0.9.7"
 toml = "^0.10.2"
+python-semantic-release = "^8.0.8"
+pre-commit = "^3.4.0"
+commitizen = "^3.8.0"
 
 [build-system]
 requires = ["poetry-core==1.6.1"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.semantic_release]
+version_toml = [
+    "pyproject.toml:tool.poetry.version"
+]
+major_on_zero = false
+branch = "main"
+upload_to_pypi = false
+upload_to_release = true
+build_command = "pip install poetry && poetry build"
+commit_message = "chore(release): {version} [skip ci]"
+tag_format = "v{version}"

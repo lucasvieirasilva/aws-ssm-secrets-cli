@@ -49,3 +49,9 @@ jobs:
         with:
           name: code-coverage
           path: coverage/coverage.xml
+
+      - name: Release
+        if: ${{ success() && (github.event_name != 'pull_request' || github.event.action == 'closed' && github.event.pull_request.merged == true) }}
+        uses: python-semantic-release/python-semantic-release@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
