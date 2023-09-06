@@ -27,4 +27,4 @@ jobs:
     - name: Run flake8
       uses: TrueBrain/actions-flake8@v2
       with:
-        flake8_version: 6.0.1
+        flake8_version: 6.1.0
