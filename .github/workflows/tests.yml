@@ -9,11 +9,6 @@ on:
   pull_request:
     branches: [master]
 
-permissions:
-  pull-requests: read
-  issues: read
-  contents: read
-
 jobs:
   tests:
     runs-on: ubuntu-latest
