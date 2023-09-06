@@ -2,7 +2,24 @@
 
 
 
+## v2.4.1 (2023-09-06)
+
+### Ci
+
+* ci: add pypi publish github action step ([`5a638b8`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/5a638b891dc2b4fd9766805f612fe0df892a0364))
+
+### Fix
+
+* fix: Correct session import on output_stack.py (#59)
+
+Co-authored-by: plinio.menarin &lt;menarin.plinio@ebanx.com&gt; ([`75ad28a`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/75ad28aec49a30dc5aabf187f6e9926b8ae8d0c3))
+
+
 ## v2.4.0 (2023-09-06)
+
+### Chore
+
+* chore(release): 2.4.0 [skip ci] ([`e9296d7`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/e9296d7e695242fd1a94d3ca074bde93dc0d2299))
 
 ### Ci
 
