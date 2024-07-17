@@ -1,5 +1,6 @@
 import abc
 import fnmatch
+import json
 import logging
 from typing import Any, Callable, Dict, List, Optional
 
@@ -51,13 +52,13 @@ class BaseEntry:
         cipher_text: str = None,
     ) -> None:
         """
-            Base class constructor
+        Base class constructor
 
-            Args:
-                session (`Session`): boto3 session
-                kms_arn (`str`): KMS Key ARN
-                data (`dict[str, Any]`): resource config properties
-                cipher_text (`str, optional`): encrypted value
+        Args:
+            session (`Session`): boto3 session
+            kms_arn (`str`): KMS Key ARN
+            data (`dict[str, Any]`): resource config properties
+            cipher_text (`str, optional`): encrypted value
         """
         self._data = data
 
@@ -65,12 +66,12 @@ class BaseEntry:
         self.session = session
         self.kms_arn = kms_arn
 
-        self.name = data['name']
-        self.description = data.get('description', '')
-        self.kms = data.get('kms', None)
-        self.tags = data.get('tags', {})
+        self.name = data["name"]
+        self.description = data.get("description", "")
+        self.kms = data.get("kms", None)
+        self.tags = data.get("tags", {})
 
-        self.raw_value = data.get('value', None)
+        self.raw_value = data.get("value", None)
         self.cipher_text = cipher_text
         self.provider = provider
 
@@ -78,34 +79,36 @@ class BaseEntry:
 
     def validate_schema(self) -> None:
         """
-            validate JSON schema
+        validate JSON schema
         """
 
         def is_string_or_yaml_tag_type(_, instance):
             """
-                Check if the type is string or one of the YAML tags:
+            Check if the type is string or one of the YAML tags:
 
-                Supported tags:
-                    - !cmd
-                    - !file
-                    - !cf_output
+            Supported tags:
+                - !cmd
+                - !file
+                - !cf_output
 
-                Args:
-                    _ (`Checker`): JSON schema checker object
-                    instance (`Any`): property value
+            Args:
+                _ (`Checker`): JSON schema checker object
+                instance (`Any`): property value
 
-                Returns:
-                    `bool`: if the instance is string or YAML tags
+            Returns:
+                `bool`: if the instance is string or YAML tags
             """
             return (
-                Draft3Validator.TYPE_CHECKER.is_type(instance, "string") or
-                isinstance(instance, CmdTag) or
-                isinstance(instance, FileTag) or
-                isinstance(instance, OutputStackTag)
+                Draft3Validator.TYPE_CHECKER.is_type(instance, "string")
+                or isinstance(instance, CmdTag)
+                or isinstance(instance, FileTag)
+                or isinstance(instance, OutputStackTag)
             )
 
         try:
-            type_checker = Draft3Validator.TYPE_CHECKER.redefine('string', is_string_or_yaml_tag_type)
+            type_checker = Draft3Validator.TYPE_CHECKER.redefine(
+                "string", is_string_or_yaml_tag_type
+            )
             custom_validator = extend(Draft3Validator, type_checker=type_checker)
             validator = custom_validator(schema=self.schema())
             validator.validate(instance=self._data)
@@ -115,95 +118,109 @@ class BaseEntry:
     @abc.abstractmethod
     def schema(self) -> dict:
         """
-            Schema validation definition
+        Schema validation definition
 
-            Returns:
-                `dict`: JSON Schema format
+        Returns:
+            `dict`: JSON Schema format
         """
+
+    def decrypt(self, format: bool = False) -> str:
+        """
+        Decrypt definition
+
+        Returns:
+            `str`: decrypted value
+        """
+        value = self._do_decrypt()
+        return self._try_format_value(value) if format else value
 
     @abc.abstractmethod
-    def decrypt(self) -> str:
+    def _do_decrypt(self) -> str:
         """
-            Decrypt definition
+        Decrypt definition
 
-            Returns:
-                `str`: decrypted value
+        Returns:
+            `str`: decrypted value
         """
 
     @abc.abstractmethod
     def encrypt(self) -> Optional[str]:
         """
-            Encrypt definition
+        Encrypt definition
 
-            Returns:
-                `str`, optional: encrypted value or None
+        Returns:
+            `str`, optional: encrypted value or None
         """
 
     def parse_tags(self) -> List[Dict[str, str]]:
         """
-            Parse Tags from dict format to the AWS API Format:
+        Parse Tags from dict format to the AWS API Format:
 
-            Returns:
-                `List[dict[str, str]]`: list of tags
+        Returns:
+            `List[dict[str, str]]`: list of tags
 
-            Examples:
-                >>> parse_tags({ 'origin': 'CLI' })
-                [
-                    {
-                        'Key': 'origin',
-                        'Value': 'CLI'
-                    }
-                ]
+        Examples:
+            >>> parse_tags({ 'origin': 'CLI' })
+            [
+                {
+                    'Key': 'origin',
+                    'Value': 'CLI'
+                }
+            ]
         """
         tags = []
         for key in self.tags.keys():
-            tags.append({
-                'Key': key,
-                'Value': self.tags[key]
-            })
+            tags.append({"Key": key, "Value": self.tags[key]})
         return tags
+
+    def _try_format_value(self, value: str) -> str:
+        try:
+            # Try to pretty print the JSON output
+            return json.dumps(json.loads(value), indent=2)
+        except Exception:
+            pass
+
+        return value
 
 
 @six.add_metaclass(abc.ABCMeta)
 class BaseProvider:
     """
-        Base provider class defines the behavior of the AWS Secrets providers
+    Base provider class defines the behavior of the AWS Secrets providers
 
-        Currently, SSM Parameters and AWS Secrets Manager
+    Currently, SSM Parameters and AWS Secrets Manager
 
-        The provider features are:
-            - decrypt/encrypt
-            - list/filter entries
-            - find entries
-            - add new entries
-            - update entries
-            - deploy entries to the AWS environment
+    The provider features are:
+        - decrypt/encrypt
+        - list/filter entries
+        - find entries
+        - add new entries
+        - update entries
+        - deploy entries to the AWS environment
 
-        > Entries are the proper resource configuration, (e.g SSM Parameter or AWS Secrets Manager secret)
+    > Entries are the proper resource configuration, (e.g SSM Parameter or AWS Secrets Manager secret)
+
+    Args:
+        config (`ConfigReader`): configuration file reader handler
+
+    Attributes:
+        logger (`Logger`): logger instance
+        global_tags (`Dict[str, str]`): map of global tags of the config file
+        session (`Session`): boto3 session object
+        kms_arn (`str`): Main Kms ARN
+        config_data (`Dict[str, Any]`): configuration parsed YAML
+        secrets_data (`Dict[str, Any]`): secrets parsed YAML
+        entries (`List[BaseEntry]`): entries list
+    """
+
+    __metaclass__ = abc.ABCMeta
+
+    def __init__(self, config):
+        """
+        class constructor
 
         Args:
             config (`ConfigReader`): configuration file reader handler
-
-        Attributes:
-            logger (`Logger`): logger instance
-            global_tags (`Dict[str, str]`): map of global tags of the config file
-            session (`Session`): boto3 session object
-            kms_arn (`str`): Main Kms ARN
-            config_data (`Dict[str, Any]`): configuration parsed YAML
-            secrets_data (`Dict[str, Any]`): secrets parsed YAML
-            entries (`List[BaseEntry]`): entries list
-    """
-    __metaclass__ = abc.ABCMeta
-
-    def __init__(
-        self,
-        config
-    ):
-        """
-            class constructor
-
-            Args:
-                config (`ConfigReader`): configuration file reader handler
         """
         self.logger = logging.getLogger(__name__)
         self.global_tags = config.global_tags
@@ -216,35 +233,37 @@ class BaseProvider:
 
     def filter(self, filter_pattern: Optional[str]) -> List[BaseEntry]:
         """
-            Filter entries based on a wildcard pattern
+        Filter entries based on a wildcard pattern
 
-            Args:
-                filter_pattern (`str`, optional): filter pattern
+        Args:
+            filter_pattern (`str`, optional): filter pattern
 
-            Returns:
-                `List[BaseEntry]`: list of filtered entries
+        Returns:
+            `List[BaseEntry]`: list of filtered entries
         """
         if filter_pattern:
-            return list(filter(lambda e: fnmatch.fnmatch(e.name, filter_pattern), self.entries))
+            return list(
+                filter(lambda e: fnmatch.fnmatch(e.name, filter_pattern), self.entries)
+            )
         else:
             return self.entries
 
     def merge_tags(self, resource: BaseEntry) -> None:
         """
-            Merge global tags with the resource tags
+        Merge global tags with the resource tags
 
-            Args:
-                resource (`BaseEntry`): resource object
+        Args:
+            resource (`BaseEntry`): resource object
         """
         resource.tags = {**self.global_tags, **resource.tags}
 
     def print_resource_name(self, resource: str, name: str) -> None:
         """
-            Print in the CLI console the resource name with the separator line below
+        Print in the CLI console the resource name with the separator line below
 
-            Args:
-                resource (`str`): resource type (e.g `Parameter` or `Secret`)
-                name (`str`): resource name
+        Args:
+            resource (`str`): resource type (e.g `Parameter` or `Secret`)
+            name (`str`): resource name
         """
         secret_msg = f"{resource}: [{name}]"
         click.echo(utils.repeat_to_length("=", len(secret_msg)))
@@ -252,43 +271,48 @@ class BaseProvider:
 
     def print_changes(self, changes: Dict[str, Any]):
         """
-            Print resource changes in the CLI console
+        Print resource changes in the CLI console
 
-            Args:
-                changes (`Dict[str, Any]`): map of changes
+        Args:
+            changes (`Dict[str, Any]`): map of changes
         """
         click.echo("--> Changes:")
-        for change_item in changes['ChangesList']:
+        for change_item in changes["ChangesList"]:
             click.echo(f"   --> {change_item['Key']}:")
-            click.echo(
-                f"          Old Value: {change_item['OldValue']}")
-            click.echo(
-                f"          New Value: {change_item['Value']}")
+            click.echo(f"          Old Value: {change_item['OldValue']}")
+            click.echo(f"          New Value: {change_item['Value']}")
 
     def apply_non_replaceable_attrs(
         self,
         resource: BaseEntry,
         changes: Dict[str, Any],
-        action: Callable[[BaseEntry], None]
+        action: Callable[[BaseEntry], None],
     ) -> Optional[bool]:
         """
-            Check if there are non replaceable attributes in the resource changes
+        Check if there are non replaceable attributes in the resource changes
 
-            And If has call a generic action fuction
+        And If has call a generic action fuction
 
-            Args:
-                resource (`BaseEntry`): resource object
-                changes (`Dict[str, Any]`): map of changes
-                action (`Callable[[BaseEntry], None]`): action callback function
+        Args:
+            resource (`BaseEntry`): resource object
+            changes (`Dict[str, Any]`): map of changes
+            action (`Callable[[BaseEntry], None]`): action callback function
 
-            Returns:
-                `bool`, optional: if has non replaceable attributes or None
+        Returns:
+            `bool`, optional: if has non replaceable attributes or None
         """
-        non_replaceable_attrs = list(filter(lambda change: change['Replaceable'] is False, changes['ChangesList']))
+        non_replaceable_attrs = list(
+            filter(
+                lambda change: change["Replaceable"] is False, changes["ChangesList"]
+            )
+        )
         if len(non_replaceable_attrs) > 0:
-            attrs = ", ".join(list(map(lambda attr: attr['Key'], non_replaceable_attrs)))
+            attrs = ", ".join(
+                list(map(lambda attr: attr["Key"], non_replaceable_attrs))
+            )
             if click.confirm(
-                    f"   --> These attributes [{attrs}] cannot be updated, would you like to re-create this resource?"):
+                f"   --> These attributes [{attrs}] cannot be updated, would you like to re-create this resource?"
+            ):
                 action(resource)
                 return True
             else:
@@ -299,98 +323,92 @@ class BaseProvider:
 
     @abc.abstractmethod
     def deploy(
-        self,
-        filter_pattern: Optional[str],
-        dry_run: bool,
-        confirm: bool
+        self, filter_pattern: Optional[str], dry_run: bool, confirm: bool
     ) -> None:
         """
-            Deploy abstract definition
-            This function should be implemented with the provider deployment features, such as:
-            - create new resources in the AWS environment
-            - update attributes
-            - recreate if it is necessary
+        Deploy abstract definition
+        This function should be implemented with the provider deployment features, such as:
+        - create new resources in the AWS environment
+        - update attributes
+        - recreate if it is necessary
 
-            Args:
-                filter_pattern (`Optional[str]`): resource filter pattern
-                dry_run: (`bool`): dry run flag, just calculate the changes, but not apply them.
-                confirm: (`bool`): CLI confirmation prompt for the changes.
+        Args:
+            filter_pattern (`Optional[str]`): resource filter pattern
+            dry_run: (`bool`): dry run flag, just calculate the changes, but not apply them.
+            confirm: (`bool`): CLI confirmation prompt for the changes.
         """
 
     @abc.abstractmethod
     def load_entries(self) -> List[BaseEntry]:
         """
-            Load entries abstract definition
-            This function should be implemented to load the provider entries (e.g list of ssm parameters or secrets)
+        Load entries abstract definition
+        This function should be implemented to load the provider entries (e.g list of ssm parameters or secrets)
 
-            Returns:
-                `List[BaseEntry]`: list of entries
+        Returns:
+            `List[BaseEntry]`: list of entries
         """
 
     @abc.abstractmethod
     def decrypt(self) -> None:
         """
-            Decrypt entries abstract definition
-            This function should be implemeted to decrypt all the secret entries in the provider.
+        Decrypt entries abstract definition
+        This function should be implemeted to decrypt all the secret entries in the provider.
         """
 
     def encrypt(self) -> List[Dict[str, str]]:
         """
-            Encrypt all the secret entries in the provider and returns a list of them
+        Encrypt all the secret entries in the provider and returns a list of them
 
-            Returns:
-                `List[Dict[str, str]]`: list of encrypted entries
+        Returns:
+            `List[Dict[str, str]]`: list of encrypted entries
         """
-        self.logger.debug(f'Provider - {__name__} - Encrypting entries')
+        self.logger.debug(f"Provider - {__name__} - Encrypting entries")
         result = []
         for item in self.entries:
             encrypted_value = item.encrypt()
             if encrypted_value:
-                result.append({
-                    'name': item.name,
-                    'value': encrypted_value
-                })
+                result.append({"name": item.name, "value": encrypted_value})
 
         return result
 
     @abc.abstractmethod
     def find(self, name: str) -> Optional[BaseEntry]:
         """
-            Find entry abstract definition
+        Find entry abstract definition
 
-            Args:
-                name (`str`): entry name
+        Args:
+            name (`str`): entry name
 
-            Returns:
-                `BaseEntry`, optional: entry object or None
+        Returns:
+            `BaseEntry`, optional: entry object or None
         """
 
     @abc.abstractmethod
     def add(self, data: Dict[str, Any]) -> BaseEntry:
         """
-            Add new entry abstract definition
+        Add new entry abstract definition
 
-            Args:
-                data (`Dict[str, Any]`): new entry data
+        Args:
+            data (`Dict[str, Any]`): new entry data
 
-            Returns:
-                `BaseEntry`: entry object
+        Returns:
+            `BaseEntry`: entry object
         """
 
     @abc.abstractmethod
     def update(self, data: Dict[str, Any]) -> None:
         """
-            Update an existing entry abstract definition
+        Update an existing entry abstract definition
 
-            Args:
-                data (`Dict[str, Any]`): updated entry data
+        Args:
+            data (`Dict[str, Any]`): updated entry data
         """
 
     @abc.abstractmethod
     def get_sensible_entries(self) -> List[Dict[str, Any]]:
         """
-            Get sensible entries based on the provider rules
+        Get sensible entries based on the provider rules
 
-            Returns:
-                `List[Dict[str, Any]]`: list of sensible entries data
+        Returns:
+            `List[Dict[str, Any]]`: list of sensible entries data
         """

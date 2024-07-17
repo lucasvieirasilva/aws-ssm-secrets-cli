@@ -75,8 +75,8 @@ class SecretManagerEntry(BaseEntry):
         self.logger.debug(f'Secret - {self.name} - Entry already encrypted')
         return self.cipher_text
 
-    def decrypt(self) -> str:
-        def _do_decrypt(value):
+    def _do_decrypt(self) -> str:
+        def _decrypt(value):
             self.logger.debug(f'Secret - {self.name} - Decrypting entry')
             if self.provider.encryption_sdk == 'boto3':
                 return kms.decrypt(self.session, value, self.kms_arn).decode('utf-8')
@@ -84,9 +84,9 @@ class SecretManagerEntry(BaseEntry):
                 return crypto.decrypt(self.session, value, self.kms_arn)
 
         if self.cipher_text:
-            return _do_decrypt(self.cipher_text)
+            return _decrypt(self.cipher_text)
         elif self.cipher_text is None and self.raw_value is not None and isinstance(self.raw_value, str):
-            return _do_decrypt(self.raw_value)
+            return _decrypt(self.raw_value)
 
         return self.raw_value
 

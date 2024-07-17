@@ -8,3 +8,4 @@ coverage/
 .coverage
 venv
 .venv
+.DS_Store

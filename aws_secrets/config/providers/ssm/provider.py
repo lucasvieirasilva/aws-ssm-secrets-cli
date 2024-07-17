@@ -130,7 +130,7 @@ class SSMProvider(BaseProvider):
         for idx, item_data in enumerate(data_entries):
             if item_data['name'] == data['name']:
                 self.logger.debug('Updating entry data in the data entries list')
-                data_entries[idx] = data
+                data_entries[idx] = {**item_data, **data}
 
     def deploy(
         self,

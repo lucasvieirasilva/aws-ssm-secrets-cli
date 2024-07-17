@@ -2,10 +2,11 @@ from typing import Optional
 
 import click
 from click.core import Context
-import yaml
+
 from aws_secrets.config.config_reader import ConfigReader
 from aws_secrets.helpers.catch_exceptions import catch_exceptions
 from aws_secrets.miscellaneous import session
+from aws_secrets.yaml import yaml
 
 
 @click.command(name='decrypt', help='Decrypt a configuration file')
@@ -41,4 +42,4 @@ def decrypt(
 
     output_file = output if output else f"{env_file}.dec"
     with open(output_file, 'w') as outfile:
-        yaml.safe_dump(config.data, outfile)
+        yaml.dump(config.data, outfile)

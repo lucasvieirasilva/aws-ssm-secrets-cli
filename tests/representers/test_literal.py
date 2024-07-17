@@ -1,17 +1,15 @@
+from io import StringIO
 
-import yaml
-from aws_secrets.representers.literal import Literal, literal_presenter
+from aws_secrets.representers.literal import Literal
+from aws_secrets.yaml import yaml
 
 
 def test_literal_yaml():
     """
-        Should resolve YAML literal strings
+    Should resolve YAML literal strings
     """
 
-    yaml.SafeDumper.add_representer(Literal, literal_presenter)
+    string_stream = StringIO()
+    yaml.dump({"key": Literal("UNIT TESTS")}, string_stream)
 
-    data = yaml.safe_dump({
-        'key': Literal('UNIT TESTS')
-    })
-
-    assert data == 'key: |-\n  UNIT TESTS\n'
+    assert string_stream.getvalue() == "key: |-\n  UNIT TESTS\n"
