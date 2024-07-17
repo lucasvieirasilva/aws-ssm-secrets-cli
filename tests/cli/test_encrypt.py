@@ -34,15 +34,15 @@ parameters:
       value: PlainText2
     - name: ssm3
       type: String
-      value: !cmd "value"
+      value: !cmd 'echo "value"'
     - name: ssm4
       type: SecureString
-      value: !cmd "value"
+      value: !cmd 'echo "value"'
 secrets:
     - name: secret1
       value: PlainText
     - name: secret2
-      value: !cmd "value"
+      value: !cmd 'echo "value"'
 """)
 
         result = mock_cli_runner.invoke(cli, [
@@ -56,29 +56,30 @@ secrets:
             assert config.read() == f"""kms:
   arn: {KEY_ARN}
 parameters:
-- name: ssm1
-  type: SecureString
-- name: ssm2
-  type: String
-  value: PlainText2
-- name: ssm3
-  type: String
-  value: !cmd 'value'
-- name: ssm4
-  type: SecureString
-  value: !cmd 'value'
+  - name: ssm1
+    type: SecureString
+  - name: ssm2
+    type: String
+    value: PlainText2
+  - name: ssm3
+    type: String
+    value: !cmd echo "value"
+  - name: ssm4
+    type: SecureString
+    value: !cmd echo "value"
 secrets:
-- name: secret1
-- name: secret2
-  value: !cmd 'value'
+  - name: secret1
+  - name: secret2
+    value: !cmd echo "value"
 secrets_file: ./config.secrets.yaml
 """
 
         with open('config.secrets.yaml', 'r') as secrets:
-            assert secrets.read() == """parameters:
-- name: ssm1
-  value: SecretData
+            assert secrets.read() == """\
 secrets:
-- name: secret1
-  value: SecretData
+  - name: secret1
+    value: SecretData
+parameters:
+  - name: ssm1
+    value: SecretData
 """

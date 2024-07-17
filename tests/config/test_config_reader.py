@@ -1,7 +1,8 @@
 from unittest.mock import patch
 
 from aws_secrets.config.config_reader import ConfigReader
-from aws_secrets.config.providers.secretsmanager.provider import SecretsManagerProvider
+from aws_secrets.config.providers.secretsmanager.provider import \
+    SecretsManagerProvider
 from aws_secrets.config.providers.ssm.provider import SSMProvider
 from aws_secrets.miscellaneous import session
 from aws_secrets.tags.cmd import CmdTag
@@ -146,7 +147,7 @@ parameters:
       value: 'PlainTextData'
     - name: 'ssm2'
       type: 'SecureString'
-      value: !cmd "value"
+      value: !cmd value
 secrets:
     - name: 'secret1'
       value: 'PlainTextData'
@@ -161,21 +162,22 @@ secrets:
         assert conf_data.read() == f"""kms:
   arn: {KEY_ARN}
 parameters:
-- name: ssm1
-  type: SecureString
-- name: ssm2
-  type: SecureString
-  value: !cmd 'value'
+  - name: ssm1
+    type: SecureString
+  - name: ssm2
+    type: SecureString
+    value: !cmd value
 secrets:
-- name: secret1
+  - name: secret1
 secrets_file: ./config.secrets.yaml
 """
 
     with open('config.secrets.yaml', 'r') as secrets_data:
-        assert secrets_data.read() == """parameters:
-- name: ssm1
-  value: SecretData
+        assert secrets_data.read() == """\
 secrets:
-- name: secret1
-  value: SecretData
+  - name: secret1
+    value: SecretData
+parameters:
+  - name: ssm1
+    value: SecretData
 """

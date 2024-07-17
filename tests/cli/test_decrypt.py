@@ -24,23 +24,29 @@ def test_decrypt_cli(
 
     original_config = f"""kms:
   arn: {KEY_ARN}
+# This is a comment
 parameters:
-- name: ssm1
-  type: SecureString
-- name: ssm2
-  type: String
-  value: PlainText2
-- name: ssm3
-  type: String
-  value: !cmd 'value'
-- name: ssm4
-  type: SecureString
-  value: !cmd 'value'
+  - name: ssm1
+    # This is a comment2
+    type: SecureString
+  - name: ssm2
+    type: String
+    value: PlainText2
+  - name: ssm3
+    type: String
+    value: !cmd 'echo "value"'
+  - name: ssm4
+    type: SecureString
+    value: !cmd 'echo "value"'
+
 secrets:
-- name: secret1
-- name: secret2
-  value: !cmd 'value'
+  - name: secret1
+  - name: secret2
+    value: !cmd 'echo "value"'
+
 secrets_file: ./config.secrets.yaml
+
+# This is a comment
 """
 
     original_secrets = """parameters:
@@ -75,23 +81,29 @@ secrets:
         with open(output_file, 'r') as config:
             assert config.read() == f"""kms:
   arn: {KEY_ARN}
+# This is a comment
 parameters:
-- name: ssm1
-  type: SecureString
-  value: PlainText
-- name: ssm2
-  type: String
-  value: PlainText2
-- name: ssm3
-  type: String
-  value: !cmd 'value'
-- name: ssm4
-  type: SecureString
-  value: !cmd 'value'
+  - name: ssm1
+    # This is a comment2
+    type: SecureString
+    value: PlainText
+  - name: ssm2
+    type: String
+    value: PlainText2
+  - name: ssm3
+    type: String
+    value: !cmd echo "value"
+  - name: ssm4
+    type: SecureString
+    value: !cmd echo "value"
+
 secrets:
-- name: secret1
-  value: PlainText
-- name: secret2
-  value: !cmd 'value'
+  - name: secret1
+    value: PlainText
+  - name: secret2
+    value: !cmd echo "value"
+
 secrets_file: ./config.secrets.yaml
+
+# This is a comment
 """

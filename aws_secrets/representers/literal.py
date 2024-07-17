@@ -1,22 +1,22 @@
-from yaml.dumper import SafeDumper
-from yaml.nodes import ScalarNode
+from ruamel.yaml.nodes import ScalarNode
+from ruamel.yaml.representer import SafeRepresenter
 
 
 class Literal(str):
     """
-        YAML Literal string representer
+    YAML Literal string representer
     """
 
 
-def literal_presenter(dumper: SafeDumper, data: str) -> ScalarNode:
+def literal_presenter(representer: SafeRepresenter, data: Literal) -> ScalarNode:
     """
-        YAML Literal presenter
+    YAML Literal presenter
 
-        Args:
-            dumper (`SafeDumper`): YAML safe dumper
-            data (`str`): raw value
+    Args:
+        representer (`SafeRepresenter`): YAML safe representer
+        data (`Literal`): raw value
 
-        Returns:
-            `ScalarNode` YAML scalar node
+    Returns:
+        `ScalarNode` YAML scalar node
     """
-    return dumper.represent_scalar('tag:yaml.org,2002:str', data, style='|')
+    return representer.represent_scalar("tag:yaml.org,2002:str", data, style="|")

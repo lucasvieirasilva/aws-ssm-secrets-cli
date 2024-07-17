@@ -15,4 +15,4 @@ def session() -> Session:
             `Session`: boto3 session object
     """
     return boto3.session.Session(
-        region_name=aws_region, profile_name=aws_profile)
+        region_name=aws_region if aws_region else None, profile_name=aws_profile if aws_profile else None)
