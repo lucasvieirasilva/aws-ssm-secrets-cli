@@ -1,8 +1,22 @@
 # CHANGELOG
 
+## v2.5.0 (2024-07-17)
 
+### Ci
+
+* ci: fix github actions lint workflow ([`5780ce9`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/5780ce9eac6c734ce719a4b9271427b7f4a3ce8c))
+
+* ci: migrate github actions to python 3.9 ([`3cdf876`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/3cdf876bfa7066b8ff1ac97be5e452ec3df3f93e))
+
+### Feature
+
+* feat: improve set-parameter and set-secret commands (#61) ([`da74b79`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/da74b79518cf9a476013475119dfc95baa9f8cc3))
 
 ## v2.4.1 (2023-09-06)
+
+### Chore
+
+* chore(release): 2.4.1 [skip ci] ([`ec9a89e`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/ec9a89ea546e8bdecade80fbaf0a2fe05c721fea))
 
 ### Ci
 
@@ -13,7 +27,6 @@
 * fix: Correct session import on output_stack.py (#59)
 
 Co-authored-by: plinio.menarin &lt;menarin.plinio@ebanx.com&gt; ([`75ad28a`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/75ad28aec49a30dc5aabf187f6e9926b8ae8d0c3))
-
 
 ## v2.4.0 (2023-09-06)
 
@@ -31,8 +44,7 @@ Co-authored-by: plinio.menarin &lt;menarin.plinio@ebanx.com&gt; ([`75ad28a`](htt
 
 * feat: add semantic release ([`d5f282e`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/d5f282ef8bebd35d0fb5e6b6f434b1456e8e0f18))
 
-
-## v2.3.0 (2023-09-06)
+## v2.3.0 (2023-09-05)
 
 ### Ci
 
@@ -80,7 +92,6 @@ Co-authored-by: plinio.menarin &lt;menarin.plinio@ebanx.com&gt; ([`75ad28a`](htt
 
 Co-authored-by: plinio.menarin &lt;menarin.plinio@ebanx.com&gt; ([`058b374`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/058b374bf8b52d58beaff605bfd6c09b63baa070))
 
-
 ## v2.2.0 (2023-08-21)
 
 ### Unknown
@@ -109,8 +120,7 @@ Co-authored-by: plinio.menarin &lt;menarin.plinio@ebanx.com&gt; ([`d0feccc`](htt
 
 * Fix SonarCloud Code Smells (#47) ([`2a546f7`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/2a546f79ef80a28f343c9e93ceef7594a9b0393e))
 
-
-## v2.1.0 (2022-05-24)
+## v2.1.0 (2022-05-23)
 
 ### Documentation
 
