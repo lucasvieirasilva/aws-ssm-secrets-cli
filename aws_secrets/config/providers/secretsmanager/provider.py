@@ -134,7 +134,11 @@ class SecretsManagerProvider(BaseProvider):
                 data_entries[idx] = {**data_entries[idx], **data}
 
     def deploy(
-        self, filter_pattern: Optional[str], dry_run: bool, confirm: bool
+        self,
+        filter_pattern: Optional[str],
+        dry_run: bool,
+        confirm: bool,
+        show_diff: bool,
     ) -> None:
         """
         Deploy all AWS Secrets Manager secrets changes
@@ -147,14 +151,14 @@ class SecretsManagerProvider(BaseProvider):
         click.echo("Loading AWS Secrets Manager changes...")
         any_changes = False
         for secret in self.filter(filter_pattern):
-            if self._deploy_secret(secret, dry_run, confirm):
+            if self._deploy_secret(secret, dry_run, confirm, show_diff):
                 any_changes = True
 
         if any_changes is False:
             click.echo("no changes required")
 
     def _deploy_secret(
-        self, secret: SecretManagerEntry, dry_run: bool, confirm: bool
+        self, secret: SecretManagerEntry, dry_run: bool, confirm: bool, show_diff: bool
     ) -> bool:
         """
         Deploy a secret changes
@@ -163,6 +167,7 @@ class SecretsManagerProvider(BaseProvider):
             secret (`SecretManagerEntry`): Secret entry object
             dry_run: (`bool`): dry run flag, just calculate the changes, but not apply them.
             confirm: (`bool`): CLI confirmation prompt for the changes.
+            show_diff: (`bool`): Show the diff of the changes
 
         Returns:
             `bool`: if changes are found.
@@ -183,7 +188,7 @@ class SecretsManagerProvider(BaseProvider):
                 return True
         else:
             if len(changes["ChangesList"]) > 0:
-                self._apply_secret_changes(secret, changes, dry_run, confirm)
+                self._apply_secret_changes(secret, changes, dry_run, confirm, show_diff)
                 return True
 
         return changes["Exists"] is False or len(changes["ChangesList"]) > 0
@@ -194,6 +199,7 @@ class SecretsManagerProvider(BaseProvider):
         changes: Dict[str, Any],
         dry_run: bool,
         confirm: bool,
+        show_diff: bool,
     ) -> None:
         """
         Update an existing secret on the AWS environment
@@ -203,9 +209,16 @@ class SecretsManagerProvider(BaseProvider):
             changes (`Dict[str, Any]`): map of changes
             dry_run: (`bool`): dry run flag, just calculate the changes, but not apply them.
             confirm: (`bool`): CLI confirmation prompt for the changes.
+            show_diff: (`bool`): Show the diff of the changes
         """
         self.print_resource_name("Secret", secret.name)
-        self.print_changes(changes)
+        if confirm or show_diff:
+            self.print_changes(changes)
+        else:
+            click.echo(
+                "--> Secret has changes, "
+                + "(use --show-diff to see the changes, not recommended when running in CI/CD)"
+            )
 
         if not dry_run:
             confirm_msg = "   --> Would you like to update this secret?"

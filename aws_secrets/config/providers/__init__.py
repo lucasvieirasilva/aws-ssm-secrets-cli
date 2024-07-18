@@ -323,7 +323,7 @@ class BaseProvider:
 
     @abc.abstractmethod
     def deploy(
-        self, filter_pattern: Optional[str], dry_run: bool, confirm: bool
+        self, filter_pattern: Optional[str], dry_run: bool, confirm: bool, show_diff: bool
     ) -> None:
         """
         Deploy abstract definition
