@@ -1,6 +1,16 @@
 # CHANGELOG
 
+## v2.6.0 (2024-07-18)
+
+### Feature
+
+* feat: add `--show-diff` to deploy command (#62) ([`ed39eed`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/ed39eeda299799c051e0c8138092aed015d45c11))
+
 ## v2.5.0 (2024-07-17)
+
+### Chore
+
+* chore(release): 2.5.0 [skip ci] ([`c60545d`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/c60545d4920859b651cb5f73515596e7bf84a339))
 
 ### Ci
 
