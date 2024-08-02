@@ -1,6 +1,16 @@
 # CHANGELOG
 
+## v2.6.1 (2024-08-02)
+
+### Fix
+
+* fix: change the input save keyboard prompt to Alt+Enter (for windows) (#63) ([`9dddddf`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/9dddddf77e7d9857653c52693a57459a0e8d70b5))
+
 ## v2.6.0 (2024-07-18)
+
+### Chore
+
+* chore(release): 2.6.0 [skip ci] ([`cf6c1ae`](https://github.com/lucasvieirasilva/aws-ssm-secrets-cli/commit/cf6c1aecdd0cb99bd9677fc7df4d158fe3ced270))
 
 ### Feature
 
