@@ -91,7 +91,7 @@ def get_multiline_input_save_keyboard() -> str:
     is_mac = sys.platform.startswith("darwin")
 
     if is_windows:
-        return "[Windows+Enter]"
+        return "[Alt+Enter]"
     elif is_mac:
         return "[Option+Enter]"
 
